@@ -1,5 +1,6 @@
 package ru.kiscode.kplugdi.context.bean;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.bukkit.event.Listener;
 import ru.kiscode.kplugdi.annotations.Component;
@@ -13,8 +14,11 @@ import java.util.Set;
 public class BeanDefinitionFactory {
 
     private Map<Class<?>, Method> beanConfigs;
+    @Getter
     private List<BeanDefinition> beanDefinitions;
+    @Getter
     private List<BeanDefinitionPostProcessor> beanDefinitionPostProcessors;
+    @Getter
     private List<BeanPostProcessor> beanPostProcessors;
 
     public BeanDefinitionFactory(Map<Class<?>, Method> beanConfigs) {

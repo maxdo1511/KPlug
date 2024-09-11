@@ -6,14 +6,14 @@ import ru.kiscode.kplugdi.annotations.Bean;
 import ru.kiscode.kplugdi.annotations.BeanConfiguration;
 import ru.kiscode.kplugdi.annotations.Component;
 import ru.kiscode.kplugdi.context.ApplicationContext;
-import ru.kiscode.kplugdi.context.bean.BeanDefinition;
-import ru.kiscode.kplugdi.context.bean.BeanDefinitionFactory;
+import ru.kiscode.kplugdi.context.bean.*;
 import ru.kiscode.kplugdi.context.resource.DefaultResourceLoader;
 import ru.kiscode.kplugdi.context.resource.PluginMainDirectoryResourceLoader;
 import ru.kiscode.kplugdi.context.resource.ResourceLoader;
 import ru.kiscode.kplugdi.minectaftutil.AbstractCommand;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,6 +54,44 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
 
         // Инициализация бинов
         beanDefinitionFactory.createBeanDefinitions(classes);
+
+        // Инициализация бино дефенишенов пост-процессорами
+        for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanDefinitionFactory.getBeanDefinitionPostProcessors()) {
+            beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinitionPostProcessor::postProcess);
+        }
+
+        // Создание бинов
+        beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinition -> {
+            if (beanDefinition.getScope().equals(ScopeType.SINGLETON)) {
+                if (beanDefinition.isShouldInstantiate()) {
+                    Method method = beanDefinition.getBeanConfigMethod();
+                    if (method != null) {
+                        try {
+                            Object configurationObject = method.getDeclaringClass().getConstructor().newInstance();
+                            Object bean = method.invoke(configurationObject);
+
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                                 NoSuchMethodException e) {
+                            throw new RuntimeException("Singleton Bean not created. Class: " + beanDefinition.getBeanClass().getName() + " has no default constructor", e);
+                        }
+                    } else {
+                        try {
+                            beanDefinition.getBeanConstructors().get(0).newInstance();
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                            throw new RuntimeException("Singleton Bean not created. Class: " + beanDefinition.getBeanClass().getName() + " has no default constructor", e);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Инициализация бинов пост-процессорами
+        for (BeanPostProcessor beanPostProcessor : beanDefinitionFactory.getBeanPostProcessors()) {
+            for (BeanDefinition beanDefinition : beanDefinitionFactory.getBeanDefinitions()) {
+
+            }
+        }
+
 
 
     }

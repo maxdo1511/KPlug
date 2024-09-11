@@ -19,21 +19,24 @@ public class BeanDefinitionBuilder {
     private List<Constructor<?>> beanConstructors;
     private List<Class<?>> implementedInterfaces;
 
-    public void setName(String name) {
+    public BeanDefinitionBuilder setName(String name) {
         if (name == null) throw new IllegalArgumentException("Name cannot be null");
         this.name = name;
+        return this;
     }
 
-    public void setBeanClass(Class<?> beanClass) {
+    public BeanDefinitionBuilder setBeanClass(Class<?> beanClass) {
         if (beanClass == null) throw new IllegalArgumentException("Bean class cannot be null");
         this.beanClass = beanClass;
+        return this;
     }
 
-    public void setShouldInstantiate(boolean shouldInstantiate) {
+    public BeanDefinitionBuilder setShouldInstantiate(boolean shouldInstantiate) {
         this.shouldInstantiate = shouldInstantiate;
+        return this;
     }
 
-    public void setScope() {
+    public BeanDefinitionBuilder setScope() {
         if (beanClass == null) throw new IllegalArgumentException("Bean class is null, scope cannot be set");
         Scope scope = beanClass.getAnnotation(Scope.class);
         if (scope != null) {
@@ -41,21 +44,35 @@ public class BeanDefinitionBuilder {
         } else {
             this.scopeType = ScopeType.SINGLETON;
         }
+        return this;
     }
 
-    public void setBeanConfigMethod(Method beanConfigMethod) {
+    public BeanDefinitionBuilder setBeanConfigMethod(Method beanConfigMethod) {
         this.beanConfigMethod = beanConfigMethod;
+        return this;
     }
 
-    public void setBeanConstructors() {
+    /**
+     * Пустой конструктор должен быть у всех, он стоит в начале списка
+     */
+    public BeanDefinitionBuilder setBeanConstructors() {
         if (beanClass == null) throw new IllegalArgumentException("Bean class is null, bean constructors cannot be set");
         this.beanConstructors = Arrays.asList(beanClass.getConstructors());
+        for (Constructor<?> constructor : beanConstructors) {
+            if (constructor.getParameterCount() == 0) {
+                this.beanConstructors.remove(constructor);
+                this.beanConstructors.add(0, constructor);
+                break;
+            }
+        }
+        return this;
     }
 
-    public void setImplementedInterfaces() {
+    public BeanDefinitionBuilder setImplementedInterfaces() {
         if (beanClass == null) throw new IllegalArgumentException("Bean class is null, implemented interfaces cannot be set");
         implementedInterfaces = new ArrayList<>();
         addImplementedInterfacesRecursively(Arrays.asList(beanClass.getInterfaces()));
+        return this;
     }
 
     public BeanDefinition build() {
