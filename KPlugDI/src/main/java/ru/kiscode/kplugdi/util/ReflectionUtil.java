@@ -35,8 +35,12 @@ public class ReflectionUtil {
                         .forPackage(plugin.getClass().getPackage().getName(), plugin.getClass().getClassLoader())
                         .setScanners(Scanners.values()));
     }
+    
+    public ReflectionUtil(@NonNull String packageName, @NonNull ClassLoader classLoader) {
+        reflections = new Reflections(new ConfigurationBuilder().forPackage(packageName, classLoader).setScanners(Scanners.values()));
+    }
 
-    public Set<Class<?>> getAllPluginClasses() {
+    public Set<Class<?>> getAllClasses() {
         return reflections.getSubTypesOf(Object.class);
     }
 
@@ -54,19 +58,6 @@ public class ReflectionUtil {
     }
 
     /**
-     * Returns a list of methods annotated with the specified annotation.
-     *
-     * @param clazz      The class whose methods are to be checked.
-     * @param annotation The annotation that methods are checked against.
-     * @return A list of methods annotated with the specified annotation.
-     */
-    public List<Method> getMethodsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
-        return Arrays.stream(clazz.getDeclaredMethods())
-                .filter(f -> f.isAnnotationPresent(annotation))
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Returns a set of all plugin classes annotated with the specified annotation.
      *
      * @param annotation The annotation that classes are checked against.
@@ -77,12 +68,36 @@ public class ReflectionUtil {
     }
 
     /**
+     * Returns a set of classes that implement the specified interface.
+     *
+     * @param interfaceClass The interface whose implementations are to be found.
+     * @param <I>            The type of the interface.
+     * @return A set of classes that implement the specified interface.
+     */
+    public <I> Set<Class<? extends I>> getImplementingClassesThroughSubclasses(@NonNull Class<I> interfaceClass) {
+        return reflections.getSubTypesOf(interfaceClass);
+    }
+
+    /**
+     * Returns a list of methods annotated with the specified annotation.
+     *
+     * @param clazz      The class whose methods are to be checked.
+     * @param annotation The annotation that methods are checked against.
+     * @return A list of methods annotated with the specified annotation.
+     */
+    public static List<Method> getMethodsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
+        return Arrays.stream(clazz.getDeclaredMethods())
+                .filter(f -> f.isAnnotationPresent(annotation))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Checks if the element is static.
      *
      * @param modifiers The element's modifiers.
      * @return {@code true} if the element is static, {@code false} otherwise.
      */
-    public boolean isStatic(int modifiers) {
+    public static boolean isStatic(int modifiers) {
         return Modifier.isStatic(modifiers);
     }
 
@@ -92,7 +107,7 @@ public class ReflectionUtil {
      * @param method The method to be checked.
      * @return {@code true} if the method does not have exactly one parameter, {@code false} otherwise.
      */
-    public boolean isNotOneParameter(@NonNull Method method) {
+    public static boolean isNotOneParameter(@NonNull Method method) {
         return method.getParameterCount() != 1;
     }
 
@@ -102,7 +117,7 @@ public class ReflectionUtil {
      * @param method The method to be checked.
      * @return {@code true} if the method returns {@code void}, {@code false} otherwise.
      */
-    public boolean isVoidMethod(@NonNull Method method) {
+    public static boolean isVoidMethod(@NonNull Method method) {
         return method.getReturnType() == void.class;
     }
 
@@ -113,7 +128,7 @@ public class ReflectionUtil {
      * @param clazz  The class containing the method.
      * @throws BeanCreatingException if the method is static or has incorrect parameters.
      */
-    public void validateInjectMethod(@NonNull Method method, @NonNull Class<?> clazz) {
+    public static void validateInjectMethod(@NonNull Method method, @NonNull Class<?> clazz) {
         if (isStatic(method.getModifiers())) {
             throw new BeanCreatingException(ErrorMessages.OBJECT_STATIC, "method", method.getName(), clazz.getName());
         }
@@ -129,7 +144,7 @@ public class ReflectionUtil {
      * @param method The name of the method.
      * @return A string representation of the method's path.
      */
-    public String generatePath(@NonNull Class<?> clazz, @NonNull String method) {
+    public static String generatePath(@NonNull Class<?> clazz, @NonNull String method) {
         return clazz.getSimpleName() + "." + method;
     }
 
@@ -140,23 +155,12 @@ public class ReflectionUtil {
      * @return The created instance of the class.
      * @throws BeanCreatingException if the object creation fails.
      */
-    public Object createClassObject(@NonNull Class<?> clazz) {
+    public static Object createClassObject(@NonNull Class<?> clazz) {
         try {
             return clazz.getConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new BeanCreatingException(ErrorMessages.CONSTRUCTOR_CREATING, e, clazz.getName());
         }
-    }
-
-    /**
-     * Returns a set of classes that implement the specified interface.
-     *
-     * @param interfaceClass The interface whose implementations are to be found.
-     * @param <I>            The type of the interface.
-     * @return A set of classes that implement the specified interface.
-     */
-    public <I> Set<Class<? extends I>> getImplementingClassesThroughSubclasses(@NonNull Class<I> interfaceClass) {
-        return reflections.getSubTypesOf(interfaceClass);
     }
 }

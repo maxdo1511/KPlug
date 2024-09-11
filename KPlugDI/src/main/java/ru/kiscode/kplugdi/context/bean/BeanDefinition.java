@@ -10,10 +10,9 @@ public class BeanDefinition {
     private String name;
     private Class<?> beanClass;
     private boolean shouldInstantiate;
-    private BeanScope scope;
+    private Scope scope;
     private Method beanConfigMethod;
     private List<Constructor<?>> beanConstructors;
-    private List<Field> beanFields;
-    private List<Method> beanMethods;
+    private List<Class<?>> implementedInterfaces;
 
 }

@@ -2,7 +2,6 @@ package ru.kiscode.kplugdi.addons.http_client;
 
 import lombok.NoArgsConstructor;
 import ru.kiscode.kplugdi.annotations.Component;
-import ru.kiscode.kplugdi.context.bean.BeanScope;
 
 import java.io.*;
 import java.net.HttpURLConnection;

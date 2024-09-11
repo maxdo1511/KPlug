@@ -6,15 +6,23 @@ import ru.kiscode.kplugdi.annotations.Bean;
 import ru.kiscode.kplugdi.annotations.BeanConfiguration;
 import ru.kiscode.kplugdi.annotations.Component;
 import ru.kiscode.kplugdi.context.ApplicationContext;
+import ru.kiscode.kplugdi.context.bean.BeanDefinition;
+import ru.kiscode.kplugdi.context.bean.BeanDefinitionFactory;
+import ru.kiscode.kplugdi.context.resource.DefaultResourceLoader;
+import ru.kiscode.kplugdi.context.resource.PluginMainDirectoryResourceLoader;
+import ru.kiscode.kplugdi.context.resource.ResourceLoader;
 import ru.kiscode.kplugdi.minectaftutil.AbstractCommand;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
+
+    private JavaPlugin plugin;
 
     public DefaultApplicationContextInitializer(ApplicationContext applicationContext) {
         super(applicationContext);
@@ -22,32 +30,45 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
 
     @Override
     public void initialize(JavaPlugin plugin) {
-        ReflectionUtil reflectionUtil = new ReflectionUtil(plugin);
+        this.plugin = plugin;
 
+        // Загрузка классов плагина
+        Set<Class<?>> classes = new HashSet<>();
+        loadAllResources(new PluginMainDirectoryResourceLoader(plugin), classes);
+
+        // Загрузка конфигураций бинов
         Map<Class<?>, Method> beanConfigs = new HashMap<>();
-        for (Class<?> clazz : reflectionUtil.getClassesAnnotatedWith(BeanConfiguration.class)) {
-            for (Method method : reflectionUtil.getMethodsAnnotatedWith(clazz, Bean.class)) {
+        for (Class<?> clazz : classes) {
+            BeanConfiguration beanConfiguration = clazz.getAnnotation(BeanConfiguration.class);
+            if (beanConfiguration == null) continue;
+            for (Method method : ReflectionUtil.getMethodsAnnotatedWith(clazz, Bean.class)) {
+                if (beanConfigs.containsKey(clazz)) {
+                    throw new RuntimeException("Bean already initialized. Class: " + clazz.getName());
+                }
                 beanConfigs.put(clazz, method);
             }
         }
 
-        Set<Class<?>> classes = reflectionUtil.getAllPluginClasses();
+        // Создание BeanDefinitionFactory
+        BeanDefinitionFactory beanDefinitionFactory = new BeanDefinitionFactory(beanConfigs);
 
+        // Инициализация бинов
         for (Class<?> clazz : classes) {
-            Component component = clazz.getAnnotation(Component.class);
-            if (component != null) {
-                createBeanDefinition(clazz, beanConfigs.get(clazz));
-                continue;
-            }
+            BeanDefinition beanDefinition = beanDefinitionFactory.createBeanDefinition(clazz);
+            applicationContext.
+        }
 
-            if (Listener.class.isAssignableFrom(clazz)) {
-                createBeanDefinition(clazz, beanConfigs.get(clazz));
-                continue;
-            }
 
-            if (AbstractCommand.class.isAssignableFrom(clazz)) {
-                createBeanDefinition(clazz, beanConfigs.get(clazz));
-                continue;
+    }
+
+    private void loadAllResources(ResourceLoader resourceLoader, Set<Class<?>> classes) {
+        classes.addAll(resourceLoader.loadResource());
+        for (Class<?> clazz : classes) {
+            BeanConfiguration beanConfiguration = clazz.getAnnotation(BeanConfiguration.class);
+            if (beanConfiguration != null) {
+                if (!beanConfiguration.packageName().isEmpty()) {
+                    loadAllResources(new DefaultResourceLoader(beanConfiguration.packageName()), classes);
+                }
             }
         }
     }

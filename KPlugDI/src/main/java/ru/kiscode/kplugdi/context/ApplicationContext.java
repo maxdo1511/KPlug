@@ -19,13 +19,11 @@ public class ApplicationContext {
     private ApplicationContextInitializer initializer;
     private Map<Class<?>, JavaPlugin> pluginsClasses;
     private BeanFactory beanFactory;
-    private Map<String, Object> singletonObjects;
 
     public ApplicationContext() {
         applicationContext = this;
         initializer = new DefaultApplicationContextInitializer(this);
         pluginsClasses = new java.util.HashMap<>();
-        singletonObjects = new java.util.HashMap<>();
 
         if (shouldLog) {
             logger.info("ApplicationContext initialized");
@@ -48,6 +46,14 @@ public class ApplicationContext {
         }
         pluginsClasses.put(plugin.getClass(), plugin);
         initializer.initialize(plugin);
+    }
+
+    public <T> T getBean(Class<T> clazz) {
+        return beanFactory.getBean(clazz);
+    }
+
+    public <T> T getBean(String name) {
+        return beanFactory.getBean(name);
     }
 
 }

@@ -1,6 +1,7 @@
 package ru.kiscode.kplugdi;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.context.ApplicationContext;
 
 public final class KPlugDI extends JavaPlugin {
 
@@ -10,7 +11,7 @@ public final class KPlugDI extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        ApplicationContext.run(this);
 
     }
 
