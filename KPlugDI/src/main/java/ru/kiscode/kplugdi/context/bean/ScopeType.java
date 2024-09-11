@@ -1,6 +1,6 @@
 package ru.kiscode.kplugdi.context.bean;
 
-public enum Scope {
+public enum ScopeType {
 
     SINGLETON,
     PROTOTYPE,

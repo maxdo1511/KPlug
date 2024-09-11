@@ -53,10 +53,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         BeanDefinitionFactory beanDefinitionFactory = new BeanDefinitionFactory(beanConfigs);
 
         // Инициализация бинов
-        for (Class<?> clazz : classes) {
-            BeanDefinition beanDefinition = beanDefinitionFactory.createBeanDefinition(clazz);
-            applicationContext.
-        }
+        beanDefinitionFactory.createBeanDefinitions(classes);
 
 
     }
