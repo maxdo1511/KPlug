@@ -57,10 +57,12 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
 
         // Инициализация бино дефенишенов пост-процессорами
         for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanDefinitionFactory.getBeanDefinitionPostProcessors()) {
+            //TODO переписать т.к. может вернуть другой BeanDefinition
             beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinitionPostProcessor::postProcess);
         }
 
         // Создание бинов
+        // TODO делигировать в BeanFactory
         beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinition -> {
             if (beanDefinition.getScope().equals(ScopeType.SINGLETON)) {
                 if (beanDefinition.isShouldInstantiate()) {

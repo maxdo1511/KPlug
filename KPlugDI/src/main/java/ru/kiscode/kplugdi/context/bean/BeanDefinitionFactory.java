@@ -50,13 +50,14 @@ public class BeanDefinitionFactory {
 
     private BeanDefinition createComponentBeanDefinition(Class<?> clazz, Method method) {
         BeanDefinitionBuilder beanDefinitionBuilder = new BeanDefinitionBuilder();
-        beanDefinitionBuilder.setBeanClass(clazz);
-        beanDefinitionBuilder.setBeanConfigMethod(method);
-        beanDefinitionBuilder.setBeanConstructors();
-        beanDefinitionBuilder.setImplementedInterfaces();
-        beanDefinitionBuilder.setScope();
-        beanDefinitionBuilder.setShouldInstantiate(true);
-        return beanDefinitionBuilder.build();
+        return beanDefinitionBuilder
+                .setBeanClass(clazz)
+                .setBeanConfigMethod(method)
+                .setBeanConstructors()
+                .setImplementedInterfaces()
+                .setScope()
+                .setShouldInstantiate(true)
+                .build();
     }
 
 }
