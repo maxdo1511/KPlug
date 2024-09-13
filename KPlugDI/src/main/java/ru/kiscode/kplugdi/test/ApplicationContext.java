@@ -1,9 +1,10 @@
-package ru.kiscode.kplugdi.context;
+package ru.kiscode.kplugdi.test;
 
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.context.initializer.DefaultApplicationContextInitializer;
-import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
+import ru.kiscode.kplugdi.test.bean.BeanFactory;
+import ru.kiscode.kplugdi.test.initializer.ApplicationContextInitializer;
+import ru.kiscode.kplugdi.test.initializer.DefaultApplicationContextInitializer;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.util.HashMap;
@@ -18,6 +19,7 @@ public class ApplicationContext {
     @Setter
     private ApplicationContextInitializer initializer;
     private final Map<Class<?>, JavaPlugin> pluginsClasses;
+    private BeanFactory beanFactory;
 
     public ApplicationContext() {
         applicationContext = this;
@@ -36,20 +38,27 @@ public class ApplicationContext {
         if (plugin == null) {
             throw new BeanCreatingException("Plugin is null");
         }
-        applicationContext.refreshContext(plugin);
+        applicationContext.init(plugin);
     }
 
 
-    public void refreshContext(JavaPlugin plugin) {
+
+
+    private void init(JavaPlugin plugin) {
+        if (pluginsClasses.containsKey(plugin.getClass())) {
+            throw new BeanCreatingException("Plugin already initialized");
+        }
         pluginsClasses.put(plugin.getClass(), plugin);
         initializer.initialize(plugin);
     }
 
+
     public <T> T getBean(Class<T> clazz) {
-        return null;
+        return beanFactory.getBean(clazz);
     }
 
     public <T> T getBean(String name) {
-        return null;
+        return beanFactory.getBean(name);
     }
+
 }

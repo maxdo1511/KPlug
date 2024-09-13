@@ -1,4 +1,7 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.test.bean;
+
+import lombok.Getter;
+import ru.kiscode.kplugdi.context.scope.ScopeType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -10,6 +13,7 @@ public class BeanDefinition {
     private Class<?> beanClass;
     private boolean shouldInstantiate;
     private ScopeType scopeType;
+    @Getter
     private Method beanConfigMethod;
     private List<Constructor<?>> beanConstructors;
     private List<Class<?>> implementedInterfaces;
@@ -54,10 +58,6 @@ public class BeanDefinition {
 
     public void setScope(ScopeType scopeType) {
         this.scopeType = scopeType;
-    }
-
-    public Method getBeanConfigMethod() {
-        return beanConfigMethod;
     }
 
     public void setBeanConfigMethod(Method beanConfigMethod) {

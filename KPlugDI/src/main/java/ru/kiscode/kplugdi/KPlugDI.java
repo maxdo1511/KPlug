@@ -1,7 +1,7 @@
 package ru.kiscode.kplugdi;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.context.ApplicationContext;
+import ru.kiscode.kplugdi.test.ApplicationContext;
 
 public final class KPlugDI extends JavaPlugin {
 

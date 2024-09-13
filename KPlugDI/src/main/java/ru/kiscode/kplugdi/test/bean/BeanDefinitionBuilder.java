@@ -1,7 +1,8 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.test.bean;
 
 import ru.kiscode.kplugdi.annotations.Component;
 import ru.kiscode.kplugdi.annotations.Scope;
+import ru.kiscode.kplugdi.context.scope.ScopeType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

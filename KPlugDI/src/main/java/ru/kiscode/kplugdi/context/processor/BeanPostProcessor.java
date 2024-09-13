@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.context.processor;
 
 public interface BeanPostProcessor {
 

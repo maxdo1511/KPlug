@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.context.scope;
 
 public enum ScopeType {
 

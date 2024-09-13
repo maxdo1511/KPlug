@@ -1,13 +1,14 @@
-package ru.kiscode.kplugdi.context.resource;
+package ru.kiscode.kplugdi.context.resource.impl;
 
 import ru.kiscode.kplugdi.KPlugDI;
+import ru.kiscode.kplugdi.context.resource.ResourceLoader;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.util.Set;
 
 public class DefaultResourceLoader implements ResourceLoader {
 
-    private String path;
+    private final String path;
 
     public DefaultResourceLoader(String path) {
         this.path = path;

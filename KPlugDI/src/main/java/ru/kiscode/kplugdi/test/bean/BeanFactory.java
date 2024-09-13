@@ -1,6 +1,8 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.test.bean;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
+import ru.kiscode.kplugdi.context.scope.ScopeType;
 
 import java.util.List;
 import java.util.Map;

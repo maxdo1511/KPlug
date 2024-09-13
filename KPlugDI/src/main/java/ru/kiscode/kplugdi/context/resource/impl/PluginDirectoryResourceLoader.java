@@ -1,15 +1,16 @@
-package ru.kiscode.kplugdi.context.resource;
+package ru.kiscode.kplugdi.context.resource.impl;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.context.resource.ResourceLoader;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.util.Set;
 
-public class PluginMainDirectoryResourceLoader implements ResourceLoader {
+public class PluginDirectoryResourceLoader implements ResourceLoader {
 
-    private JavaPlugin plugin;
+    private final JavaPlugin plugin;
 
-    public PluginMainDirectoryResourceLoader(JavaPlugin plugin) {
+    public PluginDirectoryResourceLoader(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 

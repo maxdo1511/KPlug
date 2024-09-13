@@ -1,10 +1,10 @@
-package ru.kiscode.kplugdi.context.bean;
+package ru.kiscode.kplugdi.test.bean;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
-import org.bukkit.event.Listener;
 import ru.kiscode.kplugdi.annotations.Component;
-import ru.kiscode.kplugdi.minectaftutil.AbstractCommand;
+import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
+import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -21,7 +21,8 @@ public class BeanDefinitionFactory {
     @Getter
     private List<BeanPostProcessor> beanPostProcessors;
 
-    public BeanDefinitionFactory(Map<Class<?>, Method> beanConfigs) {
+    public
+    BeanDefinitionFactory(Map<Class<?>, Method> beanConfigs) {
         this.beanConfigs = beanConfigs;
     }
 
