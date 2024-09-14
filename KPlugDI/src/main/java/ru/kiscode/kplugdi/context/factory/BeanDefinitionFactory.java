@@ -1,11 +1,12 @@
 package ru.kiscode.kplugdi.context.factory;
 
 import lombok.Getter;
+import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
-import ru.kiscode.kplugdi.context.reader.AnnotationBeanDefinitionReader;
-import ru.kiscode.kplugdi.test.bean.BeanDefinition;
+import ru.kiscode.kplugdi.context.reader.impl.AnnotationBeanDefinitionReader;
+
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.lang.reflect.Modifier;
@@ -34,15 +35,15 @@ public class BeanDefinitionFactory {
         for(Class<?> clazz : classes) {
             if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
             Object classInstance = null;
-            if(BeanDefinitionReader.class.isAssignableFrom(clazz)){
+            if(clazz.isInstance(BeanDefinitionReader.class)){
                 classInstance = ReflectionUtil.newInstance(clazz);
                 beanDefinitionReaders.add((BeanDefinitionReader) classInstance);
             }
-            if(BeanDefinitionPostProcessor.class.isAssignableFrom(clazz)){
+            if(clazz.isInstance(BeanDefinitionPostProcessor.class)){
                 if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
                 beanDefinitionPostProcessors.add((BeanDefinitionPostProcessor) classInstance);
             }
-            if(BeanPostProcessor.class.isAssignableFrom(clazz)){
+            if(clazz.isInstance(BeanPostProcessor.class)){
                 if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
                 beanPostProcessors.add((BeanPostProcessor) classInstance);
             }

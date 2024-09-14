@@ -1,27 +1,28 @@
-package ru.kiscode.kplugdi.context.initializer;
+package ru.kiscode.kplugdi.context.initializer.impl;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.factory.BeanDefinitionFactory;
+import ru.kiscode.kplugdi.context.factory.BeanFactory;
+import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
-import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
 
 import java.util.HashSet;
 import java.util.Set;
+@Getter
+@Setter
+public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
 
-public class DefaultApplicationContextInitializer implements ApplicationContextInitializer {
-    private final ApplicationContext applicationContext;
-    private JavaPlugin plugin;
-
-    public DefaultApplicationContextInitializer(@NonNull ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public DefaultApplicationContextInitializer(@NonNull ApplicationContext applicationContext, @NonNull BeanFactory beanFactory) {
+        super(applicationContext, beanFactory);
     }
 
     @Override
     public void initialize(@NonNull JavaPlugin plugin) {
-        this.plugin = plugin;
         Set<Class<?>> classes = new HashSet<>();
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
@@ -31,11 +32,6 @@ public class DefaultApplicationContextInitializer implements ApplicationContextI
         for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanDefinitionFactory.getBeanDefinitionPostProcessors()) {
             beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinitionPostProcessor::postProcess);
         }
-
-        for(BeanPostProcessor beanPostProcessor : beanDefinitionFactory.getBeanPostProcessors()) {
-
-        }
-
+        beanFactory.createBeans(beanDefinitionFactory.getBeanDefinitions(), beanDefinitionFactory.getBeanPostProcessors());
     }
-
 }

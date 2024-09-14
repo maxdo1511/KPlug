@@ -1,29 +1,35 @@
 package ru.kiscode.kplugdi.context;
 
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.context.initializer.DefaultApplicationContextInitializer;
+import ru.kiscode.kplugdi.context.factory.BeanFactory;
+import ru.kiscode.kplugdi.context.factory.DefaultBeanFactory;
+import ru.kiscode.kplugdi.context.initializer.impl.DefaultApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
+@Setter
+@Getter
 public class ApplicationContext {
 
     private static final Logger logger = Logger.getLogger(ApplicationContext.class.getName());
     private static final boolean shouldLog = false;
     private static ApplicationContext applicationContext;
-    @Setter
-    private ApplicationContextInitializer initializer;
-    private final Map<Class<?>, JavaPlugin> pluginsClasses;
+    private BeanFactory beanFactory;
+    private List<ApplicationContextInitializer> initializers;
+
 
     public ApplicationContext() {
         applicationContext = this;
-        initializer = new DefaultApplicationContextInitializer(this);
-        pluginsClasses = new HashMap<>();
-
+        beanFactory = new DefaultBeanFactory();
+        initializers = new ArrayList<>();
+        initializers.add(new DefaultApplicationContextInitializer(this,beanFactory));
         if (shouldLog) {
             logger.info("ApplicationContext initialized");
         }
@@ -36,20 +42,17 @@ public class ApplicationContext {
         if (plugin == null) {
             throw new BeanCreatingException("Plugin is null");
         }
-        applicationContext.refreshContext(plugin);
+
+        for(ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
+            initializer.initialize(plugin);
+        }
     }
 
-
-    public void refreshContext(JavaPlugin plugin) {
-        pluginsClasses.put(plugin.getClass(), plugin);
-        initializer.initialize(plugin);
+    public <T> T getBean(@NonNull Class<T> clazz) {
+        return beanFactory.getBean(clazz);
     }
 
-    public <T> T getBean(Class<T> clazz) {
-        return null;
-    }
-
-    public <T> T getBean(String name) {
-        return null;
+    public <T> T getBean(@NonNull String name) {
+        return beanFactory.getBean(name);
     }
 }

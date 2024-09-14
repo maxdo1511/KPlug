@@ -35,7 +35,7 @@ public class ReflectionUtil {
         try {
             return clazz.getConstructors()[0].newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new BeanCreatingException("error creating class <%s>. The class must have a public empty constructor, not be an interface or abstract class", clazz.getName());
+            throw new BeanCreatingException("Error creating class <%s>. The class must have a public empty constructor, not be an interface or abstract class", clazz.getName());
         }
     }
 
@@ -48,10 +48,6 @@ public class ReflectionUtil {
         return Arrays.stream(clazz.getDeclaredFields())
                 .filter(f -> f.isAnnotationPresent(annotation))
                 .collect(Collectors.toList());
-    }
-
-    public Set<Class<?>> getClassesAnnotatedWith(@NonNull Class<? extends Annotation> annotation) {
-        return reflections.getTypesAnnotatedWith(annotation);
     }
 
     public <I> Set<Class<? extends I>> getImplementingClassesThroughSubclasses(@NonNull Class<I> interfaceClass) {

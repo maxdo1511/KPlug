@@ -7,8 +7,8 @@ import ru.kiscode.kplugdi.context.scope.ScopeType;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 @Getter
@@ -19,11 +19,10 @@ public class BeanDefinition {
     private String name;
     private Class<?> beanClass;
     private ScopeType scopeType;
-    private List<Class<?>> dependencyClasses;
-
-    private Method beanConfigMethod;
+    private Set<Class<?>> dependencyClasses;
     private Constructor<?> constructor;
-    boolean extendFromAbstractClass;
+    private Method beanConfigMethod;
+    private boolean hasAbstractConstructor;
 
     @Override
     public boolean equals(Object o) {

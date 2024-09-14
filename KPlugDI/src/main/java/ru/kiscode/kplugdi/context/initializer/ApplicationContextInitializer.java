@@ -3,16 +3,25 @@ package ru.kiscode.kplugdi.context.initializer;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.ComponentScan;
+import ru.kiscode.kplugdi.context.ApplicationContext;
+import ru.kiscode.kplugdi.context.factory.BeanFactory;
 import ru.kiscode.kplugdi.context.resource.ResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.DefaultResourceLoader;
 
 import java.util.Set;
 
-public interface ApplicationContextInitializer {
+public abstract class ApplicationContextInitializer {
+    protected final ApplicationContext applicationContext;
+    protected final BeanFactory beanFactory;
 
-    void initialize(@NonNull JavaPlugin plugin);
+    public ApplicationContextInitializer(@NonNull ApplicationContext applicationContext, @NonNull BeanFactory beanFactory) {
+        this.applicationContext = applicationContext;
+        this.beanFactory = beanFactory;
+    }
 
-    default void loadAllResources(@NonNull ResourceLoader resourceLoader, @NonNull Set<Class<?>> classes) {
+    public abstract void initialize(@NonNull JavaPlugin plugin);
+
+    protected void loadAllResources(@NonNull ResourceLoader resourceLoader, @NonNull Set<Class<?>> classes) {
         classes.addAll(resourceLoader.loadResource());
 
         for (Class<?> clazz : classes) {
