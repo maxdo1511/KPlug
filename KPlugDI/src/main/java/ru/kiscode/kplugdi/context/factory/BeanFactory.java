@@ -3,6 +3,7 @@ package ru.kiscode.kplugdi.context.factory;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.NonNull;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.scope.ScopeType;
@@ -30,26 +31,16 @@ public abstract class BeanFactory {
     public abstract Object createBean(@NonNull BeanDefinition beanDefinition);
 
 
-    @SuppressWarnings("unchecked")
-    public <T> T getBean(Class<T> clazz) {
-        Collection<Object> objects = singletonObjectsByClass.get(clazz);
-        if(!objects.isEmpty()){
-            if(objects.size() > 1){
-                throw new BeanCreatingException("Multiply beans found. Use custom name for getting bean. Class: " + clazz);
-            }
-            return (T) objects.iterator().next();
-        }
-        Collection<BeanDefinition> beanDefinitions = beanDefinitionsByClass.get(clazz);
-        if(!beanDefinitions.isEmpty()){
-            if(beanDefinitions.size() > 1){
-                throw new BeanCreatingException("Multiply beans found. Use custom name for getting bean. Class: " + clazz);
-            }
-            BeanDefinition beanDefinition = beanDefinitions.iterator().next();
-            if(beanDefinition.getScopeType() == ScopeType.PROTOTYPE){
-                return (T) createBean(beanDefinition);
-            }
-        }
-        throw new BeanCreatingException("Bean not found. Class: " + clazz);
+    public <T> T getBean(@NonNull Class<T> clazz, @NonNull JavaPlugin plugin) {
+        return null;
+    }
+
+    public <T> T getBean(@NonNull Class<T> clazz, @NonNull String packageToScan) {
+        return null;
+    }
+
+    public <T> T getBean(@NonNull Class<T> clazz) {
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -66,6 +57,4 @@ public abstract class BeanFactory {
         }
         throw new BeanCreatingException("Bean not found. Name: " + name);
     }
-
-
 }

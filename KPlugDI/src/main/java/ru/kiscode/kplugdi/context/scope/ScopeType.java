@@ -4,6 +4,5 @@ public enum ScopeType {
 
     SINGLETON,
     PROTOTYPE,
-    PLUGIN
 
 }

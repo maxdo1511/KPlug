@@ -12,7 +12,6 @@ public final class KPlugDI extends JavaPlugin {
     @Override
     public void onEnable() {
         ApplicationContext.run(this);
-
     }
 
     @Override

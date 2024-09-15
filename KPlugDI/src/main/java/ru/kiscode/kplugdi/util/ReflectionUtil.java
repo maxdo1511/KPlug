@@ -8,6 +8,7 @@ import org.reflections.util.ConfigurationBuilder;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,7 +36,7 @@ public class ReflectionUtil {
         try {
             return clazz.getConstructors()[0].newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new BeanCreatingException("Error creating class <%s>. The class must have a public empty constructor, not be an interface or abstract class", clazz.getName());
+            throw new BeanCreatingException("Error creating class <%s>. The class must have a public empty constructor, not be an interface or abstract class", clazz.getName(),e);
         }
     }
 
@@ -58,5 +59,15 @@ public class ReflectionUtil {
         return Arrays.stream(clazz.getDeclaredMethods())
                 .filter(f -> f.isAnnotationPresent(annotation))
                 .collect(Collectors.toList());
+    }
+
+    public static List<Constructor<?>> getConstructorsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
+        return Arrays.stream(clazz.getDeclaredConstructors())
+                .filter(f -> f.isAnnotationPresent(annotation))
+                .collect(Collectors.toList());
+    }
+
+    public static String generateBeanName(@NonNull String beanName, @NonNull JavaPlugin plugin) {
+        return plugin.getName() + "." + beanName;
     }
 }

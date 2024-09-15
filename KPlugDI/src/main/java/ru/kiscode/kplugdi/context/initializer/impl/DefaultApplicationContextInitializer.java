@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.factory.BeanDefinitionFactory;
-import ru.kiscode.kplugdi.context.factory.BeanFactory;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
@@ -17,8 +16,8 @@ import java.util.Set;
 @Setter
 public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
 
-    public DefaultApplicationContextInitializer(@NonNull ApplicationContext applicationContext, @NonNull BeanFactory beanFactory) {
-        super(applicationContext, beanFactory);
+    public DefaultApplicationContextInitializer(@NonNull ApplicationContext applicationContext) {
+        super(applicationContext);
     }
 
     @Override
@@ -26,12 +25,13 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         Set<Class<?>> classes = new HashSet<>();
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
-        BeanDefinitionFactory beanDefinitionFactory = new BeanDefinitionFactory();
+        BeanDefinitionFactory beanDefinitionFactory = new BeanDefinitionFactory(plugin);
         beanDefinitionFactory.createBeanDefinitions(classes);
 
         for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanDefinitionFactory.getBeanDefinitionPostProcessors()) {
             beanDefinitionFactory.getBeanDefinitions().forEach(beanDefinitionPostProcessor::postProcess);
         }
+
         beanFactory.createBeans(beanDefinitionFactory.getBeanDefinitions(), beanDefinitionFactory.getBeanPostProcessors());
     }
 }

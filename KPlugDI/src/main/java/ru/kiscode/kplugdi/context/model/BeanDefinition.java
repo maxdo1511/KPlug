@@ -1,28 +1,21 @@
 package ru.kiscode.kplugdi.context.model;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import ru.kiscode.kplugdi.context.scope.ScopeType;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.Objects;
-import java.util.Set;
 
 
 @Getter
 @Setter
-@Builder
-public class BeanDefinition {
+@SuperBuilder
+public abstract class BeanDefinition {
 
     private String name;
     private Class<?> beanClass;
     private ScopeType scopeType;
-    private Set<Class<?>> dependencyClasses;
-    private Constructor<?> constructor;
-    private Method beanConfigMethod;
-    private boolean hasAbstractConstructor;
+    private Class<?>[] implementInterfaces;
 
     @Override
     public boolean equals(Object o) {

@@ -5,7 +5,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.factory.BeanFactory;
-import ru.kiscode.kplugdi.context.factory.DefaultBeanFactory;
+import ru.kiscode.kplugdi.context.factory.impl.DefaultBeanFactory;
 import ru.kiscode.kplugdi.context.initializer.impl.DefaultApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
@@ -25,11 +25,13 @@ public class ApplicationContext {
     private List<ApplicationContextInitializer> initializers;
 
 
+
+
     public ApplicationContext() {
         applicationContext = this;
         beanFactory = new DefaultBeanFactory();
         initializers = new ArrayList<>();
-        initializers.add(new DefaultApplicationContextInitializer(this,beanFactory));
+        initializers.add(new DefaultApplicationContextInitializer(this));
         if (shouldLog) {
             logger.info("ApplicationContext initialized");
         }
@@ -48,11 +50,23 @@ public class ApplicationContext {
         }
     }
 
+    public <T> T getBean(@NonNull Class<T> clazz, @NonNull JavaPlugin plugin) {
+        return beanFactory.getBean(clazz,plugin);
+    }
+
     public <T> T getBean(@NonNull Class<T> clazz) {
         return beanFactory.getBean(clazz);
     }
 
     public <T> T getBean(@NonNull String name) {
         return beanFactory.getBean(name);
+    }
+
+    public <T> T getBean(@NonNull Class<T> clazz, @NonNull String packageToScan) {
+        return beanFactory.getBean(clazz,packageToScan);
+    }
+
+    public void addApplicationContextInitializer(@NonNull ApplicationContextInitializer initializer) {
+        initializers.add(initializer);
     }
 }
