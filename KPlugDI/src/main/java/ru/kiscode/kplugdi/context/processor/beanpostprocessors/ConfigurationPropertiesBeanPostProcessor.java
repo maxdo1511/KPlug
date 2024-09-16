@@ -8,19 +8,23 @@ import ru.kiscode.kplugdi.context.reader.ConfigReader;
 import ru.kiscode.kplugdi.context.reader.impl.DefaultConfigReader;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConfigurationPropertiesBeanPostProcessor implements BeanPostProcessor {
+
+    private Map<JavaPlugin, ConfigReader> configReaders = new HashMap<>();
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
         ConfigurationProperties annotation = bean.getClass().getAnnotation(ConfigurationProperties.class);
         if (annotation != null) {
-            ConfigReader configReader = new DefaultConfigReader(plugin);
+            ConfigReader configReader = getConfigReader(plugin);
             for (Field field : bean.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
-                //TODO позаботиться о преобразовании типов
                 try {
-                    field.set(bean, configReader.readValue(field.getName(), ""));
+                    Object configParam = configReader.readValue(field.getName(), field.getType(), null);
+                    field.set(bean, configParam);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException("Can't access field " + field.getName(), e);
                 }
@@ -34,20 +38,28 @@ public class ConfigurationPropertiesBeanPostProcessor implements BeanPostProcess
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
         Field[] fields = bean.getClass().getDeclaredFields();
+        ConfigReader configReader = getConfigReader(plugin);
         for (Field field : fields) {
             field.setAccessible(true);
             Value value = field.getAnnotation(Value.class);
             if (value != null) {
-                // TODO перенести как-то синглтон, чтобы не открывать 1000 раз
-                ConfigReader configReader = new DefaultConfigReader(plugin);
-                //TODO позаботиться о преобразовании типов
                 try {
-                    field.set(bean, configReader.readValue(value.value(), value.defaultValue()));
+                    Object configParam = configReader.readValue(value.value(), field.getType(), null);
+                    field.set(bean, configParam);
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException("Can't access field " + field.getName(), e);
                 }
             }
         }
         return bean;
+    }
+
+    private ConfigReader getConfigReader(JavaPlugin plugin) {
+        ConfigReader configReader = configReaders.get(plugin);
+        if (configReader == null) {
+            configReader = new DefaultConfigReader(plugin);
+            configReaders.put(plugin, configReader);
+        }
+        return configReader;
     }
 }

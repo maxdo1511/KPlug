@@ -1,10 +1,9 @@
 package ru.kiscode.kplugdi.context.reader;
 
-import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.util.Storage;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 
 public interface ConfigReader {
 
-    String readValue(String path, String defaultValue);
+    <T> T readValue(String path, Class<T> type, T defaultValue);
 
 }

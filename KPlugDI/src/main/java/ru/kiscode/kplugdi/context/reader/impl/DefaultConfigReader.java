@@ -1,10 +1,13 @@
 package ru.kiscode.kplugdi.context.reader.impl;
 
+import lombok.SneakyThrows;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.reader.ConfigReader;
 import ru.kiscode.kplugdi.util.Storage;
 
 import java.io.File;
+import java.lang.reflect.Method;
 
 public class DefaultConfigReader implements ConfigReader {
 
@@ -14,9 +17,12 @@ public class DefaultConfigReader implements ConfigReader {
         readStorage(plugin);
     }
 
+    @SneakyThrows
     @Override
-    public String readValue(JavaPlugin plugin, String path, String defaultValue) {
-        return storage.getConfig().getString(path, defaultValue);
+    public <T> T readValue(String path, Class<T> type, T defaultValue) {
+        String methodName = "get" + type.getSimpleName();
+        Method method = storage.getClass().getMethod(methodName, type);
+        return type.cast(method.invoke(storage, defaultValue));
     }
 
     public void readStorage(JavaPlugin plugin) {
