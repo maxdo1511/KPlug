@@ -6,7 +6,7 @@ import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.util.Set;
 
-public class PluginDirectoryResourceLoader implements ResourceLoader {
+public class PluginDirectoryResourceLoader implements ResourceLoader<Set<Class<?>>> {
 
     private final JavaPlugin plugin;
 

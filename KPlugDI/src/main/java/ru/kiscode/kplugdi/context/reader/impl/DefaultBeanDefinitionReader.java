@@ -30,13 +30,16 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     public Set<BeanDefinition> createBeanDefinition(@NonNull Class<?> clazz){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         if(clazz.isAnnotationPresent(Component.class)){
+            validateClass(clazz);
             BeanDefinition beanDefinition = getComponentBeanDefinition(clazz, clazz.getAnnotation(Component.class).name());
-            validateBeanDefinition(beanDefinition,beanDefinitions);
             beanDefinitions.add(beanDefinition);
         }
         if(clazz.isAnnotationPresent(BeanConfiguration.class)){
             for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz)){
-                validateBeanDefinition(beanDefinition,beanDefinitions);
+                validateClass(clazz);
+                if(beanDefinitions.contains(beanDefinition)){
+                    throw new BeanCreatingException("bean with name << %s >> already exists", beanDefinition.getName());
+                }
                 beanDefinitions.add(beanDefinition);
             }
         }
@@ -44,7 +47,6 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     }
 
     private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz, @NonNull String componentName){
-        validateComponentClass(clazz);
         if(componentName.isEmpty()) componentName = clazz.getName();
         return ComponentBeanDefinition.builder()
                 .name(componentName)
@@ -56,9 +58,11 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     }
 
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
-        validateComponentClass(clazz);
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
-        for(Method method: ReflectionUtil.getMethodsAnnotatedWith(clazz, Bean.class)){
+        for(Method method: ReflectionUtil.getAllMethods(clazz,false)){
+            if(!method.isAnnotationPresent(Bean.class)){
+                throw new BeanCreatingException("method should be annotated with @PostConstruct or @PreConstruct. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
+            }
             if(Modifier.isStatic(method.getModifiers())){
                 throw new BeanCreatingException("@Bean method can't be static. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
             }
@@ -87,25 +91,12 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         return "singleton";
     }
 
-    private void validateBeanDefinition(@NonNull BeanDefinition beanDefinition, @NonNull Set<BeanDefinition> beanDefinitions){
-        if(beanDefinitions.contains(beanDefinition)){
-            throw new BeanCreatingException("bean with name << %s >> already exists", beanDefinition.getName());
+    private void validateClass(@NonNull Class<?> clazz){
+        if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())){
+            throw new BeanCreatingException("@Component can't be interface or abstract. class: << %s >>", clazz.getName());
         }
     }
 
-    private void validateComponentClass(@NonNull Class<?> clazz){
-        if(Modifier.isAbstract(clazz.getModifiers())){
-            throw new BeanCreatingException("bean class << %s >>  must not be abstract", clazz.getName());
-        }
-        if(clazz.isInterface()){
-            throw new BeanCreatingException("bean class << %s >> must not be an interface", clazz.getName());
-        }
-        try {
-            clazz.getConstructor();
-        } catch (NoSuchMethodException e) {
-            throw new BeanCreatingException("bean class << %s >> must have a public empty constructor", clazz.getName(),e);
-        }
-    }
 
 
 }
