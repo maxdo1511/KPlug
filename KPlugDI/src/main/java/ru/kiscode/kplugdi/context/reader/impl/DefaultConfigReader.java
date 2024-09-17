@@ -1,8 +1,7 @@
 package ru.kiscode.kplugdi.context.reader.impl;
 
 import lombok.SneakyThrows;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.bukkit.plugin.java.JavaPlugin;
+ import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.reader.ConfigReader;
 import ru.kiscode.kplugdi.util.Storage;
 

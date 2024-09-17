@@ -8,7 +8,6 @@ import org.reflections.util.ConfigurationBuilder;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,23 +50,9 @@ public class ReflectionUtil {
                 .collect(Collectors.toList());
     }
 
-    public <I> Set<Class<? extends I>> getImplementingClassesThroughSubclasses(@NonNull Class<I> interfaceClass) {
-        return reflections.getSubTypesOf(interfaceClass);
-    }
-
     public static List<Method> getMethodsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
         return Arrays.stream(clazz.getDeclaredMethods())
                 .filter(f -> f.isAnnotationPresent(annotation))
                 .collect(Collectors.toList());
-    }
-
-    public static List<Constructor<?>> getConstructorsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
-        return Arrays.stream(clazz.getDeclaredConstructors())
-                .filter(f -> f.isAnnotationPresent(annotation))
-                .collect(Collectors.toList());
-    }
-
-    public static String generateBeanName(@NonNull String beanName, @NonNull JavaPlugin plugin) {
-        return plugin.getName() + "." + beanName;
     }
 }

@@ -12,4 +12,5 @@ import java.lang.reflect.Method;
 @SuperBuilder
 public class ConfigurationBeanDefinition extends BeanDefinition {
     private Method configurationMethod;
+    private Class<?> superClass;
 }

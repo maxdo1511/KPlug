@@ -24,9 +24,6 @@ public class ApplicationContext {
     private BeanFactory beanFactory;
     private List<ApplicationContextInitializer> initializers;
 
-
-
-
     public ApplicationContext() {
         applicationContext = this;
         beanFactory = new DefaultBeanFactory();
@@ -50,23 +47,10 @@ public class ApplicationContext {
         }
     }
 
-    public <T> T getBean(@NonNull Class<T> clazz, @NonNull JavaPlugin plugin) {
-        return beanFactory.getBean(clazz,plugin);
-    }
-
-    public <T> T getBean(@NonNull Class<T> clazz) {
-        return beanFactory.getBean(clazz);
-    }
-
-    public <T> T getBean(@NonNull String name) {
-        return beanFactory.getBean(name);
-    }
-
-    public <T> T getBean(@NonNull Class<T> clazz, @NonNull String packageToScan) {
-        return beanFactory.getBean(clazz,packageToScan);
-    }
-
     public void addApplicationContextInitializer(@NonNull ApplicationContextInitializer initializer) {
         initializers.add(initializer);
+    }
+    public void removeApplicationContextInitializer(@NonNull ApplicationContextInitializer initializer) {
+        initializers.remove(initializer);
     }
 }

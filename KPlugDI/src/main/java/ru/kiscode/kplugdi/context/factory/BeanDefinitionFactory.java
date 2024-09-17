@@ -10,7 +10,7 @@ import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
 import ru.kiscode.kplugdi.context.reader.impl.DefaultBeanDefinitionReader;
-import ru.kiscode.kplugdi.context.scope.ScopeType;
+
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.lang.reflect.Modifier;
@@ -67,7 +67,7 @@ public class BeanDefinitionFactory {
                 .name(plugin.getClass().getName())
                 .beanClass(plugin.getClass())
                 .implementInterfaces(plugin.getClass().getInterfaces())
-                .scopeType(ScopeType.SINGLETON)
+                .scope("singleton")
                 .build();
     }
 

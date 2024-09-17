@@ -2,7 +2,6 @@ package ru.kiscode.kplugdi.context.model;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import ru.kiscode.kplugdi.context.scope.ScopeType;
 
 import java.util.Objects;
 
@@ -14,7 +13,7 @@ public abstract class BeanDefinition {
 
     private String name;
     private Class<?> beanClass;
-    private ScopeType scopeType;
+    private String scope;
     private Class<?>[] implementInterfaces;
 
     @Override

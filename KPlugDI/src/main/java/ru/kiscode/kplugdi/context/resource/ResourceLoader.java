@@ -2,8 +2,8 @@ package ru.kiscode.kplugdi.context.resource;
 
 import java.util.Set;
 
-public interface ResourceLoader {
+public interface ResourceLoader<T> {
 
-    Set<Class<?>> loadResource();
+    T loadResource();
 
 }

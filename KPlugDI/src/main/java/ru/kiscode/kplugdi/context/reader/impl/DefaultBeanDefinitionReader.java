@@ -10,11 +10,9 @@ import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
-import ru.kiscode.kplugdi.context.scope.ScopeType;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
@@ -33,13 +31,12 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         if(clazz.isAnnotationPresent(Component.class)){
             BeanDefinition beanDefinition = getComponentBeanDefinition(clazz, clazz.getAnnotation(Component.class).name());
-            checkBeanDefinition(beanDefinition,beanDefinitions);
+            validateBeanDefinition(beanDefinition,beanDefinitions);
             beanDefinitions.add(beanDefinition);
         }
         if(clazz.isAnnotationPresent(BeanConfiguration.class)){
-            beanDefinitions.add(getComponentBeanDefinition(clazz,clazz.getName()));
             for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz)){
-                checkBeanDefinition(beanDefinition,beanDefinitions);
+                validateBeanDefinition(beanDefinition,beanDefinitions);
                 beanDefinitions.add(beanDefinition);
             }
         }
@@ -47,29 +44,19 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     }
 
     private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz, @NonNull String componentName){
-        if(Modifier.isAbstract(clazz.getModifiers())){
-            throw new BeanCreatingException("@Component class << %s >>  must not be abstract", clazz.getName());
-        }
-        if(clazz.isInterface()){
-            throw new BeanCreatingException("@Component class << %s >> must not be an interface", clazz.getName());
-        }
-        Constructor<?> constructor;
-        try {
-            constructor = clazz.getConstructor();
-        } catch (NoSuchMethodException e) {
-            throw new BeanCreatingException("@Component class << %s >> must have a public empty constructor", clazz.getName(),e);
-        }
+        validateComponentClass(clazz);
         if(componentName.isEmpty()) componentName = clazz.getName();
         return ComponentBeanDefinition.builder()
                 .name(componentName)
                 .beanClass(clazz)
                 .implementInterfaces(clazz.getInterfaces())
-                .scopeType(getScopeType(clazz))
-                .constructor(constructor)
+                .scope(getScopeType(clazz))
+                .superClass(clazz.getSuperclass())
                 .build();
     }
 
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
+        validateComponentClass(clazz);
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Method method: ReflectionUtil.getMethodsAnnotatedWith(clazz, Bean.class)){
             if(Modifier.isStatic(method.getModifiers())){
@@ -85,23 +72,40 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
                     .name(beanName)
                     .beanClass(method.getReturnType())
                     .implementInterfaces(method.getReturnType().getInterfaces())
-                    .scopeType(getScopeType(method.getReturnType()))
+                    .scope(getScopeType(method.getReturnType()))
                     .configurationMethod(method)
+                    .superClass(method.getReturnType().getSuperclass())
                     .build());
         }
         return beanDefinitions;
     }
 
-    private ScopeType getScopeType(@NonNull Class<?> clazz){
+    private String getScopeType(@NonNull Class<?> clazz){
         if(clazz.isAnnotationPresent(Scope.class)){
             return clazz.getAnnotation(Scope.class).value();
         }
-        return ScopeType.SINGLETON;
+        return "singleton";
     }
 
-    private void checkBeanDefinition(@NonNull BeanDefinition beanDefinition, @NonNull Set<BeanDefinition> beanDefinitions){
+    private void validateBeanDefinition(@NonNull BeanDefinition beanDefinition, @NonNull Set<BeanDefinition> beanDefinitions){
         if(beanDefinitions.contains(beanDefinition)){
             throw new BeanCreatingException("bean with name << %s >> already exists", beanDefinition.getName());
         }
     }
+
+    private void validateComponentClass(@NonNull Class<?> clazz){
+        if(Modifier.isAbstract(clazz.getModifiers())){
+            throw new BeanCreatingException("bean class << %s >>  must not be abstract", clazz.getName());
+        }
+        if(clazz.isInterface()){
+            throw new BeanCreatingException("bean class << %s >> must not be an interface", clazz.getName());
+        }
+        try {
+            clazz.getConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new BeanCreatingException("bean class << %s >> must have a public empty constructor", clazz.getName(),e);
+        }
+    }
+
+
 }

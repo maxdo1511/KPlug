@@ -21,7 +21,7 @@ public abstract class ApplicationContextInitializer {
 
     public abstract void initialize(@NonNull JavaPlugin plugin);
 
-    protected void loadAllResources(@NonNull ResourceLoader resourceLoader, @NonNull Set<Class<?>> classes) {
+    protected void loadAllResources(@NonNull ResourceLoader<Set<Class<?>>> resourceLoader, @NonNull Set<Class<?>> classes) {
         classes.addAll(resourceLoader.loadResource());
 
         for (Class<?> clazz : classes) {
