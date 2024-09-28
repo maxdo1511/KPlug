@@ -93,7 +93,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
 
     private void validateClass(@NonNull Class<?> clazz){
         if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())){
-            throw new BeanCreatingException("@Component can't be interface or abstract. class: << %s >>", clazz.getName());
+            throw new BeanCreatingException("class << %s >> can't be interface or abstract", clazz.getName());
         }
     }
 

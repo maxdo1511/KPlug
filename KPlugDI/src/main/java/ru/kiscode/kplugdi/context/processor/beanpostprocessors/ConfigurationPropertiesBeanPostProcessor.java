@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class ConfigurationPropertiesBeanPostProcessor implements BeanPostProcessor {
 
-    private Map<JavaPlugin, ConfigReader> configReaders = new HashMap<>();
+    private final Map<JavaPlugin, ConfigReader> configReaders = new HashMap<>();
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
