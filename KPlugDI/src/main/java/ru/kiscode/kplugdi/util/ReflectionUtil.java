@@ -7,6 +7,7 @@ import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -60,9 +61,12 @@ public class ReflectionUtil {
         return methods;
     }
 
+    public static boolean hasAnnotation(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
+        return clazz.isAnnotationPresent(annotation);
+    }
 
-
-
-
+    public static boolean hasAnnotation(@NonNull Method method, @NonNull Class<? extends Annotation> annotation) {
+        return method.isAnnotationPresent(annotation);
+    }
 
 }

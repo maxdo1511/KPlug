@@ -4,7 +4,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public interface BeanPostProcessor {
 
-    Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin);
-    Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin);
+    default Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
+        return bean;
+    }
+    default Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
+        return bean;
+    }
 
 }
