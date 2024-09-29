@@ -1,5 +1,6 @@
-package ru.kiscode.kplugdi.pluginutil.commands.processers;
+package ru.kiscode.commands.processers;
 
+import lombok.SneakyThrows;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -9,10 +10,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.commands.TestCommand;
+import ru.kiscode.commands.annotations.Command;
+import ru.kiscode.commands.annotations.CommandParams;
+import ru.kiscode.commands.interfaces.KPlugCommand;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
-import ru.kiscode.kplugdi.pluginutil.commands.TestCommand;
-import ru.kiscode.kplugdi.pluginutil.commands.annotations.Command;
-import ru.kiscode.kplugdi.pluginutil.commands.annotations.CommandParams;
 import ru.kiscode.kplugdi.util.ReflectionUtil;
 
 import java.lang.reflect.InvocationTargetException;
@@ -50,20 +52,28 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
         }
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(target.getClass());
-        enhancer.setInterfaces(new Class[]{CommandExecutor.class, TabCompleter.class});
+        enhancer.setInterfaces(new Class[]{CommandExecutor.class, TabCompleter.class, KPlugCommand.class});
         enhancer.setCallback(new MethodInterceptor() {
             @Override
             public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
                 if (method.getName().equals("onCommand")) {
                     if (objects[3] == null) {
-                        Method noArgs = target.getClass().getDeclaredMethod("noArgs", CommandSender.class);
+                        Method noArgs = null;
+                        try {
+                            noArgs = target.getClass().getDeclaredMethod("noArgs", CommandSender.class);
+                        } catch (NoSuchMethodException ignored) {}
+                        if (noArgs == null) return true;
                         noArgs.invoke(target, objects[0]);
                         return true;
                     }
                     return onCommand(o, (CommandSender) objects[0], args.get(beanName), (String) objects[2], ((String[]) objects[3]));
                 }
                 if (method.getName().equals("onTabComplete")) {
-                    return onTabComplete((CommandSender) objects[0], (org.bukkit.command.Command) objects[1], (String) objects[2], ((String[]) objects[3]));
+                    Method tabComplete = null;
+                    try {
+                        tabComplete = target.getClass().getDeclaredMethod("tabComplete", CommandSender.class, String[].class);
+                    } catch (NoSuchMethodException ignored) {}
+                    return onTabComplete(o, (CommandSender) objects[0], tabComplete, ((String[]) objects[3]));
                 }
                 return methodProxy.invokeSuper(o, objects);
             }
@@ -85,20 +95,37 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
         method.invoke(origin, objects);
     }
 
-    public List<String> complete(CommandSender sender, String[] args){
-        return null;
+    public List<String> complete(Object origin, CommandSender sender, Method method, String[] args){
+        List<String> result = new ArrayList<>();
+        try {
+            result = (List<String>) method.invoke(origin, sender, args);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+        }
+        if (result == null) return new ArrayList<>();
+        return result;
     }
 
     public boolean onCommand(Object origin, CommandSender sender, Map<String, Method> methods, String label, String[] args){
         try {
-            execute(origin, sender, findMethod(methods, args), label, args);
+            Method method = findMethod(methods, args);
+            if (method == null) {
+                Method wrongArgs = origin.getClass().getDeclaredMethod("wrongArgs", CommandSender.class);
+                wrongArgs.invoke(origin, sender);
+                return false;
+            }
+            execute(origin, sender, method, label, args);
         } catch (InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
         }
         return true;
     }
 
-    public List<String> onTabComplete(CommandSender sender, org.bukkit.command.Command command, String label, String[] args){
-        return filter(complete(sender, args), args);
+    public List<String> onTabComplete(Object origin, CommandSender sender, Method method, String[] args){
+        List<String> complete = new ArrayList<>();
+        if (method != null) {
+            complete = complete(origin, sender, method, args);
+        }
+        System.out.println(complete);
+        return filter(complete, args);
     }
 
     private List<String> filter(List<String> list, String[] args){

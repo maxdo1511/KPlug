@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.pluginutil.commands.annotations;
+package ru.kiscode.commands.annotations;
 
 
 import ru.kiscode.kplugdi.annotations.Component;
