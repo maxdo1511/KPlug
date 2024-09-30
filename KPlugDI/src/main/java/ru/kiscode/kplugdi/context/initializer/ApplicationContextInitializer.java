@@ -9,6 +9,9 @@ public abstract class ApplicationContextInitializer {
 
     public ApplicationContextInitializer(@NonNull ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+        applicationContext.getBeanFactory().setBeanProcessRegistry(applicationContext.getBeanProcessRegistry());
+        applicationContext.getBeanFactory().setBeanRegistry(applicationContext.getBeanRegistry());
+        applicationContext.getBeanDefinitionFactory().setBeanProcessRegistry(applicationContext.getBeanProcessRegistry());
     }
 
     public abstract void initialize(@NonNull JavaPlugin plugin);

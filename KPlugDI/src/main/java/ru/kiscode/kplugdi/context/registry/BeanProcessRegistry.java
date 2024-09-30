@@ -11,14 +11,14 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 @Getter
-public class BeanProcessorRegistry {
+public class BeanProcessRegistry {
 
     private final Set<BeanDefinitionPostProcessor> beanDefinitionPostProcessors;
     private final Set<BeanPostProcessor> beanPostProcessors;
     private final Set<BeanDefinitionReader> beanDefinitionReaders;
     private Set<Class<?>> classes;
 
-    public BeanProcessorRegistry(){
+    public BeanProcessRegistry(){
         beanDefinitionPostProcessors = new HashSet<>();
         beanPostProcessors = new HashSet<>();
         beanDefinitionReaders = new HashSet<>();

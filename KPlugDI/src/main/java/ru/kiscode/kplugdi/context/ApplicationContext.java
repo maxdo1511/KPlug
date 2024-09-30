@@ -4,35 +4,47 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.context.factory.bean.BeanFactory;
-import ru.kiscode.kplugdi.context.factory.bean.DefaultBeanFactory;
-import ru.kiscode.kplugdi.context.factory.definition.BeanDefinitionFactory;
-import ru.kiscode.kplugdi.context.factory.definition.DefaultBeanDefinitionFactory;
+import ru.kiscode.kplugdi.KPlugDI;
+import ru.kiscode.kplugdi.context.factory.BeanFactory;
+import ru.kiscode.kplugdi.context.factory.impl.DefaultBeanFactory;
+import ru.kiscode.kplugdi.context.factory.BeanDefinitionFactory;
+import ru.kiscode.kplugdi.context.factory.impl.DefaultBeanDefinitionFactory;
 import ru.kiscode.kplugdi.context.initializer.impl.DefaultApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
+import ru.kiscode.kplugdi.context.registry.BeanProcessRegistry;
+import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-@Setter
 @Getter
 public class ApplicationContext {
 
     private static final Logger logger = Logger.getLogger(ApplicationContext.class.getName());
     private static final boolean shouldLog = false;
     private static ApplicationContext applicationContext;
+    private final BeanProcessRegistry beanProcessRegistry;
+    private final Set<ApplicationContextInitializer> initializers;
+    @Setter
     private BeanFactory beanFactory;
+    @Setter
     private BeanDefinitionFactory beanDefinitionFactory;
-    private Set<ApplicationContextInitializer> initializers;
+    @Getter
+    private BeanRegistry beanRegistry;
 
     public ApplicationContext() {
         applicationContext = this;
+
+        beanProcessRegistry = new BeanProcessRegistry();
         beanFactory = new DefaultBeanFactory();
         beanDefinitionFactory = new DefaultBeanDefinitionFactory();
+        beanRegistry = KPlugDI.getInstance().getBeanRegistry();
+
         initializers = new HashSet<>();
         initializers.add(new DefaultApplicationContextInitializer(this));
+
         if (shouldLog) {
             logger.info("ApplicationContext initialized");
         }

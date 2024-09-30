@@ -6,11 +6,10 @@ import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.ComponentScan;
 import ru.kiscode.kplugdi.context.ApplicationContext;
-import ru.kiscode.kplugdi.context.factory.definition.DefaultBeanDefinitionFactory;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
-import ru.kiscode.kplugdi.context.registry.BeanProcessorRegistry;
+import ru.kiscode.kplugdi.context.registry.BeanProcessRegistry;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.DefaultResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
@@ -30,16 +29,15 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         Set<Class<?>> classes = new HashSet<>();
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
-        BeanProcessorRegistry beanProcessorRegistry = new BeanProcessorRegistry();
-        beanProcessorRegistry.register(classes);
+        BeanProcessRegistry beanProcessRegistry = new BeanProcessRegistry();
+        beanProcessRegistry.register(classes);
+        Set<BeanDefinition> beanDefinitions = new HashSet<>(applicationContext.getBeanDefinitionFactory().createBeanDefinitions(plugin));
 
-        Set<BeanDefinition> beanDefinitions = new HashSet<>(applicationContext.getBeanDefinitionFactory().createBeanDefinitions(beanProcessorRegistry,plugin));
-
-        for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanProcessorRegistry.getBeanDefinitionPostProcessors()) {
+        for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanProcessRegistry.getBeanDefinitionPostProcessors()) {
             beanDefinitions.forEach(beanDefinitionPostProcessor::postProcess);
         }
 
-        applicationContext.getBeanFactory().createBeans(beanDefinitions, beanProcessorRegistry);
+        applicationContext.getBeanFactory().createBeans(beanDefinitions);
     }
 
     private void loadAllResources(@NonNull CollectionResourceLoader<Class<?>> resourceLoader, @NonNull Set<Class<?>> classes) {
