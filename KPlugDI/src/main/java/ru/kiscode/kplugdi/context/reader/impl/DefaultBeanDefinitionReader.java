@@ -2,19 +2,15 @@ package ru.kiscode.kplugdi.context.reader.impl;
 
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.annotations.Bean;
-import ru.kiscode.kplugdi.annotations.BeanConfiguration;
-import ru.kiscode.kplugdi.annotations.Component;
-import ru.kiscode.kplugdi.annotations.Scope;
+import ru.kiscode.kplugdi.annotations.*;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
-import ru.kiscode.kplugdi.util.ReflectionUtil;
+import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,58 +24,48 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
 
     @Override
     public Set<BeanDefinition> createBeanDefinition(@NonNull Class<?> clazz){
+        ReflectionUtil.isInterfaceOrAbstract(clazz);
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         if(clazz.isAnnotationPresent(Component.class)){
-            validateClass(clazz);
-            BeanDefinition beanDefinition = getComponentBeanDefinition(clazz, clazz.getAnnotation(Component.class).name());
+            BeanDefinition beanDefinition = getComponentBeanDefinition(clazz);
             beanDefinitions.add(beanDefinition);
         }
         if(clazz.isAnnotationPresent(BeanConfiguration.class)){
             for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz)){
-                validateClass(clazz);
-                if(beanDefinitions.contains(beanDefinition)){
-                    throw new BeanCreatingException("bean with name << %s >> already exists", beanDefinition.getName());
+                if(!beanDefinitions.add(beanDefinition)){
+                    throw new BeanCreatingException("bean with name << %s >> already exists in context. Please change bean name", beanDefinition.getName());
                 }
-                beanDefinitions.add(beanDefinition);
             }
         }
         return beanDefinitions;
     }
 
-    private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz, @NonNull String componentName){
-        if(componentName.isEmpty()) componentName = clazz.getName();
+    private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz){
+        String componentName = clazz.isAnnotationPresent(CustomBeanName.class) &&
+                !clazz.getAnnotation(CustomBeanName.class).name().isEmpty() ?
+                clazz.getAnnotation(CustomBeanName.class).name() : clazz.getName();
         return ComponentBeanDefinition.builder()
                 .name(componentName)
                 .beanClass(clazz)
                 .implementInterfaces(clazz.getInterfaces())
                 .scope(getScopeType(clazz))
-                .superClass(clazz.getSuperclass())
                 .build();
     }
 
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Method method: ReflectionUtil.getAllMethods(clazz,false)){
-            //TODO что за странная ошибка
-            if(!method.isAnnotationPresent(Bean.class)){
-                throw new BeanCreatingException("method should be annotated with @PostConstruct or @PreConstruct. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
-            }
-            if(Modifier.isStatic(method.getModifiers())){
-                throw new BeanCreatingException("@Bean method can't be static. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
-            }
-            if(method.getReturnType() == void.class){
-                throw new BeanCreatingException("@Bean method can't be void. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
-            }
-            String beanName = method.getAnnotation(Bean.class).name();
-            if(beanName.isEmpty()) beanName = plugin.getName()+"."+method.getName();
-            else beanName = plugin.getName()+"."+beanName;
+            ReflectionUtil.isStatic(method);
+            ReflectionUtil.checkReturnType(method,false);
+            String beanName = method.isAnnotationPresent(CustomBeanName.class) &&
+                    !method.getAnnotation(CustomBeanName.class).name().isEmpty() ?
+                    method.getAnnotation(CustomBeanName.class).name() : plugin.getName() + "." + method.getName();
             beanDefinitions.add(ConfigurationBeanDefinition.builder()
                     .name(beanName)
                     .beanClass(method.getReturnType())
                     .implementInterfaces(method.getReturnType().getInterfaces())
                     .scope(getScopeType(method.getReturnType()))
                     .configurationMethod(method)
-                    .superClass(method.getReturnType().getSuperclass())
                     .build());
         }
         return beanDefinitions;
@@ -91,13 +77,5 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         }
         return "singleton";
     }
-
-    private void validateClass(@NonNull Class<?> clazz){
-        if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())){
-            throw new BeanCreatingException("class << %s >> can't be interface or abstract", clazz.getName());
-        }
-    }
-
-
 
 }

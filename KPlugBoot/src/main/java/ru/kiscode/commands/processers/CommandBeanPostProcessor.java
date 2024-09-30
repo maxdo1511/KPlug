@@ -1,6 +1,5 @@
 package ru.kiscode.commands.processers;
 
-import lombok.SneakyThrows;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
@@ -10,12 +9,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.commands.TestCommand;
 import ru.kiscode.commands.annotations.Command;
 import ru.kiscode.commands.annotations.CommandParams;
 import ru.kiscode.commands.interfaces.KPlugCommand;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
-import ru.kiscode.kplugdi.util.ReflectionUtil;
+import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

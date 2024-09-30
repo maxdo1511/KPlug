@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.util;
+package ru.kiscode.kplugdi.utils;
 
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;

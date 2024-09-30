@@ -3,7 +3,7 @@ package ru.kiscode.kplugdi.context.reader.impl;
 import lombok.SneakyThrows;
  import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.reader.ConfigReader;
-import ru.kiscode.kplugdi.util.Storage;
+import ru.kiscode.kplugdi.utils.Storage;
 
 import java.io.File;
 import java.lang.reflect.Method;

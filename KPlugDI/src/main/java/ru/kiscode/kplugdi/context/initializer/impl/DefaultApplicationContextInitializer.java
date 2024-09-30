@@ -30,7 +30,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
         BeanProcessRegistry beanProcessRegistry = new BeanProcessRegistry();
-        beanProcessRegistry.register(classes);
+        beanProcessRegistry.findAndRegisterProcessors(classes);
         Set<BeanDefinition> beanDefinitions = new HashSet<>(applicationContext.getBeanDefinitionFactory().createBeanDefinitions(plugin));
 
         for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanProcessRegistry.getBeanDefinitionPostProcessors()) {

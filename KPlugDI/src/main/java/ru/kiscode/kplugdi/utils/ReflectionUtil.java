@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.util;
+package ru.kiscode.kplugdi.utils;
 
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,6 +11,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,11 +32,17 @@ public class ReflectionUtil {
         reflections = new Reflections(new ConfigurationBuilder().forPackage(packageName, classLoader).setScanners(Scanners.values()));
     }
 
-    public static Object newInstance(Class<?> clazz) {
+    public static Object newInstance(@NonNull Class<?> clazz) {
         try {
             return clazz.getConstructors()[0].newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new BeanCreatingException("Error creating class <%s>." + "The class must have a public empty constructor, " + "not be an interface or abstract class",e, clazz.getName());
+        }
+    }
+
+    public static void isStatic(@NonNull Field field) {
+        if (Modifier.isStatic(field.getModifiers())) {
+            throw new BeanCreatingException("Field << %s >> must not be static", field.getName());
         }
     }
 
@@ -67,6 +74,32 @@ public class ReflectionUtil {
 
     public static boolean hasAnnotation(@NonNull Method method, @NonNull Class<? extends Annotation> annotation) {
         return method.isAnnotationPresent(annotation);
+    }
+    public static void isStatic(@NonNull Method method){
+        if(Modifier.isStatic(method.getModifiers())){
+            throw new BeanCreatingException("method can't be static. method: << %s >>, class: << %s >>", method.getName(), method.getDeclaringClass().getName());
+        }
+    }
+
+    public static void checkReturnType(@NonNull Method method, boolean shouldBeVoid){
+        if(shouldBeVoid && method.getReturnType() != void.class){
+            throw new BeanCreatingException("method should be void. method: << %s >>, class: << %s >>", method.getName(), method.getDeclaringClass().getName());
+        }
+        if(!shouldBeVoid && method.getReturnType() == void.class){
+            throw new BeanCreatingException("method should not be void. method: << %s >>, class: << %s >>", method.getName(), method.getDeclaringClass().getName());
+        }
+    }
+
+    public static void multiplyParameters(@NonNull Method method){
+        if(method.getParameterCount() != 1){
+            throw new BeanCreatingException("method should have one parameter. method: << %s >>, class: << %s >>", method.getName(), method.getDeclaringClass().getName());
+        }
+    }
+
+    public static void isInterfaceOrAbstract(@NonNull Class<?> clazz){
+        if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())){
+            throw new BeanCreatingException("class << %s >> can't be interface or abstract", clazz.getName());
+        }
     }
 
 }

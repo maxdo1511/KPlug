@@ -5,7 +5,8 @@ import lombok.NonNull;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
-import ru.kiscode.kplugdi.util.ReflectionUtil;
+import ru.kiscode.kplugdi.context.reader.BeanReader;
+import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
@@ -16,15 +17,17 @@ public class BeanProcessRegistry {
     private final Set<BeanDefinitionPostProcessor> beanDefinitionPostProcessors;
     private final Set<BeanPostProcessor> beanPostProcessors;
     private final Set<BeanDefinitionReader> beanDefinitionReaders;
+    private final Set<BeanReader> beanReaders;
     private Set<Class<?>> classes;
 
     public BeanProcessRegistry(){
         beanDefinitionPostProcessors = new HashSet<>();
         beanPostProcessors = new HashSet<>();
         beanDefinitionReaders = new HashSet<>();
+        beanReaders = new HashSet<>();
     }
 
-    public void register(@NonNull Set<Class<?>> classes){
+    public void findAndRegisterProcessors(@NonNull Set<Class<?>> classes){
         this.classes = classes;
         for(Class<?> clazz : classes){
             if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
@@ -44,6 +47,43 @@ public class BeanProcessRegistry {
                 BeanDefinitionReader beanDefinitionReader = (BeanDefinitionReader) classInstance;
                 beanDefinitionReaders.add(beanDefinitionReader);
             }
+            if(clazz.isInstance(BeanReader.class)){
+                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
+                BeanReader beanReader = (BeanReader) classInstance;
+                beanReaders.add(beanReader);
+            }
         }
+    }
+
+    public void registerBeanDefinitionPostProcessor(@NonNull BeanDefinitionPostProcessor beanDefinitionPostProcessor) {
+        beanDefinitionPostProcessors.add(beanDefinitionPostProcessor);
+    }
+
+    public void registerBeanPostProcessor(@NonNull BeanPostProcessor beanPostProcessor) {
+        beanPostProcessors.add(beanPostProcessor);
+    }
+
+    public void registerBeanDefinitionReader(@NonNull BeanDefinitionReader beanDefinitionReader) {
+        beanDefinitionReaders.add(beanDefinitionReader);
+    }
+
+    public void registerBeanReader(@NonNull BeanReader beanReader) {
+        beanReaders.add(beanReader);
+    }
+
+    public void removeBeanReader(@NonNull BeanReader beanReader) {
+        beanReaders.remove(beanReader);
+    }
+
+    public void removeBeanDefinitionPostProcessor(@NonNull BeanDefinitionPostProcessor beanDefinitionPostProcessor) {
+        beanDefinitionPostProcessors.remove(beanDefinitionPostProcessor);
+    }
+
+    public void removeBeanPostProcessor(@NonNull BeanPostProcessor beanPostProcessor) {
+        beanPostProcessors.remove(beanPostProcessor);
+    }
+
+    public void removeBeanDefinitionReader(@NonNull BeanDefinitionReader beanDefinitionReader) {
+        beanDefinitionReaders.remove(beanDefinitionReader);
     }
 }

@@ -2,8 +2,7 @@ package ru.kiscode.kplugdi.context.resource.impl;
 
 import ru.kiscode.kplugdi.KPlugDI;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
-import ru.kiscode.kplugdi.context.resource.ResourceLoader;
-import ru.kiscode.kplugdi.util.ReflectionUtil;
+import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.util.Set;
 
