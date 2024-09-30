@@ -60,6 +60,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Method method: ReflectionUtil.getAllMethods(clazz,false)){
+            //TODO что за странная ошибка
             if(!method.isAnnotationPresent(Bean.class)){
                 throw new BeanCreatingException("method should be annotated with @PostConstruct or @PreConstruct. method: << %s >>, class: << %s >>", method.getName(), clazz.getName());
             }
