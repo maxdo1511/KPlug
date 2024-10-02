@@ -6,11 +6,13 @@ import ru.kiscode.kplugdi.annotations.*;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
+import ru.kiscode.kplugdi.context.model.impl.PluginBeanDefinition;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +39,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
                 }
             }
         }
+        beanDefinitions.add(getPluginBeanDefinition(plugin));
         return beanDefinitions;
     }
 
@@ -44,10 +47,13 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         String componentName = clazz.isAnnotationPresent(CustomBeanName.class) &&
                 !clazz.getAnnotation(CustomBeanName.class).name().isEmpty() ?
                 clazz.getAnnotation(CustomBeanName.class).name() : clazz.getName();
+        Set<Class<?>> implementInterfaces = new HashSet<>(Arrays.asList(clazz.getInterfaces()));
+        Class<?> superClass = clazz.getSuperclass();
+        if(superClass != null) implementInterfaces.add(superClass);
         return ComponentBeanDefinition.builder()
                 .name(componentName)
                 .beanClass(clazz)
-                .implementInterfaces(clazz.getInterfaces())
+                .implementInterfaces(implementInterfaces)
                 .scope(getScopeType(clazz))
                 .build();
     }
@@ -55,20 +61,34 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Method method: ReflectionUtil.getAllMethods(clazz,false)){
-            ReflectionUtil.isStatic(method);
-            ReflectionUtil.checkReturnType(method,false);
+            ReflectionUtil.isStatic(method,Bean.class);
+            ReflectionUtil.checkReturnType(method,false,Bean.class);
             String beanName = method.isAnnotationPresent(CustomBeanName.class) &&
                     !method.getAnnotation(CustomBeanName.class).name().isEmpty() ?
                     method.getAnnotation(CustomBeanName.class).name() : plugin.getName() + "." + method.getName();
             beanDefinitions.add(ConfigurationBeanDefinition.builder()
                     .name(beanName)
                     .beanClass(method.getReturnType())
-                    .implementInterfaces(method.getReturnType().getInterfaces())
+                    .implementInterfaces(new HashSet<>(Arrays.asList(method.getReturnType().getInterfaces())))
                     .scope(getScopeType(method.getReturnType()))
                     .configurationMethod(method)
                     .build());
         }
         return beanDefinitions;
+    }
+
+    private BeanDefinition getPluginBeanDefinition(@NonNull JavaPlugin plugin) {
+        Set<Class<?>> implementInterfaces = new HashSet<>(Arrays.asList(plugin.getClass().getInterfaces()));
+        Class<?> superClass = plugin.getClass().getSuperclass();
+        if(superClass != null) implementInterfaces.add(superClass);
+        return PluginBeanDefinition.builder()
+                .pluginInstance(plugin)
+                .name(plugin.getClass().getName())
+                .beanClass(plugin.getClass())
+                .implementInterfaces(implementInterfaces)
+                .scope("singleton")
+                .build();
+
     }
 
     private String getScopeType(@NonNull Class<?> clazz){
@@ -77,5 +97,4 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         }
         return "singleton";
     }
-
 }

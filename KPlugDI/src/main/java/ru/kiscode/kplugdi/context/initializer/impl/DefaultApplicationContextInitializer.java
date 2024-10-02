@@ -8,8 +8,6 @@ import ru.kiscode.kplugdi.annotations.ComponentScan;
 import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
-import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
-import ru.kiscode.kplugdi.context.registry.BeanProcessRegistry;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.DefaultResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
@@ -24,20 +22,30 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         super(applicationContext);
     }
 
+
     @Override
     public void initialize(@NonNull JavaPlugin plugin) {
+
+        //загружаем нужные классы
         Set<Class<?>> classes = new HashSet<>();
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
-        BeanProcessRegistry beanProcessRegistry = new BeanProcessRegistry();
+        //регистрируем необходимые процессы, ивенты и конверт классы и выгружаем из контекста наружу
         beanProcessRegistry.findAndRegisterProcessors(classes);
+    }
+
+    @Override
+    public void run(@NonNull JavaPlugin plugin) {
+        //создаем beanDefinitions
         Set<BeanDefinition> beanDefinitions = new HashSet<>(applicationContext.getBeanDefinitionFactory().createBeanDefinitions(plugin));
 
-        for (BeanDefinitionPostProcessor beanDefinitionPostProcessor : beanProcessRegistry.getBeanDefinitionPostProcessors()) {
-            beanDefinitions.forEach(beanDefinitionPostProcessor::postProcess);
-        }
+        //ивент BeanDefinitionPostProcess
+        beanDefinitions
+                .forEach(beanDefinition -> beanProcessRegistry.getBeanDefinitionPostProcessors()
+                        .forEach(beanDefinitionPostProcessor -> beanDefinitionPostProcessor.postProcess(beanDefinition)));
 
-        applicationContext.getBeanFactory().createBeans(beanDefinitions);
+        //создаем бины
+        applicationContext.getBeanRegistry().createAndRegistryBeans(beanDefinitions,plugin);
     }
 
     private void loadAllResources(@NonNull CollectionResourceLoader<Class<?>> resourceLoader, @NonNull Set<Class<?>> classes) {

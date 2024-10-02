@@ -1,8 +1,9 @@
 package ru.kiscode.kplugdi.context.reader.impl;
 
 import lombok.NonNull;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.CustomBeanName;
-import ru.kiscode.kplugdi.context.factory.BeanFactory;
+import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
@@ -17,7 +18,7 @@ import java.lang.reflect.Parameter;
 
 public class DefaultBeanReader implements BeanReader {
     @Override
-    public Object createBean(@NonNull BeanDefinition beanDefinition, @NonNull BeanFactory beanFactory) {
+    public Object createBean(@NonNull BeanDefinition beanDefinition, @NonNull BeanRegistry beanRegistry, @NonNull JavaPlugin plugin) {
         if(beanDefinition instanceof PluginBeanDefinition){
             return ((PluginBeanDefinition) beanDefinition).getPluginInstance();
         }
@@ -35,7 +36,7 @@ public class DefaultBeanReader implements BeanReader {
                 Parameter parameter = parameters[i];
                 Object parameterBean = parameter.isAnnotationPresent(CustomBeanName.class) &&
                         !parameter.getAnnotation(CustomBeanName.class).name().isEmpty() ?
-                        beanFactory.getBean(parameter.getAnnotation(CustomBeanName.class).name()) : beanFactory.getBean(parameter.getType());
+                        beanRegistry.getBean(parameter.getAnnotation(CustomBeanName.class).name(),plugin) : beanRegistry.getBean(parameter.getType(),plugin);
                 objects[i] = parameterBean;
             }
             method.setAccessible(true);

@@ -1,4 +1,4 @@
-package ru.kiscode.kplugdi.context.processor.beanpostprocessors;
+package ru.kiscode.kplugdi.context.processor.bean;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.ConfigurationProperties;

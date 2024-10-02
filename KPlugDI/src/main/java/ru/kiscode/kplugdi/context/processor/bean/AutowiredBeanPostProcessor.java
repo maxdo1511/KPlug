@@ -1,9 +1,9 @@
-package ru.kiscode.kplugdi.context.processor.beanpostprocessors;
+package ru.kiscode.kplugdi.context.processor.bean;
 
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.Autowired;
-import ru.kiscode.kplugdi.context.factory.BeanFactory;
+import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
@@ -14,24 +14,20 @@ import java.lang.reflect.Method;
 
 public class AutowiredBeanPostProcessor implements BeanPostProcessor {
 
-    private final BeanFactory beanFactory;
+    private final BeanRegistry beanRegistry;
 
-    public AutowiredBeanPostProcessor(@NonNull BeanFactory beanFactory) {
-        this.beanFactory = beanFactory;
+    public AutowiredBeanPostProcessor(@NonNull BeanRegistry beanRegistry) {
+        this.beanRegistry = beanRegistry;
     }
 
+    //TODO должен запускаться первым
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
-        return null;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
         for(Field field: ReflectionUtil.getAllFields(bean.getClass(), true)){
             if(!field.isAnnotationPresent(Autowired.class)) continue;
-            ReflectionUtil.isStatic(field);
+            ReflectionUtil.isStatic(field, Autowired.class);
             Autowired autowired = field.getAnnotation(Autowired.class);
-            Object autowiredBean = autowired.name().isEmpty() ? beanFactory.getBean(field.getType()) : beanFactory.getBean(autowired.name());
+            Object autowiredBean = autowired.name().isEmpty() ? beanRegistry.getBean(field.getType(),plugin) : beanRegistry.getBean(autowired.name(),plugin);
             field.setAccessible(true);
             try {
                 field.set(bean, autowiredBean);
@@ -41,12 +37,12 @@ public class AutowiredBeanPostProcessor implements BeanPostProcessor {
         }
         for(Method method: ReflectionUtil.getAllMethods(bean.getClass(), true)){
             if(!method.isAnnotationPresent(Autowired.class)) continue;
-            ReflectionUtil.isStatic(method);
-            ReflectionUtil.checkReturnType(method,true);
+            ReflectionUtil.isStatic(method,Autowired.class);
+            ReflectionUtil.checkReturnType(method,true, Autowired.class);
             ReflectionUtil.multiplyParameters(method);
             Autowired autowired = method.getAnnotation(Autowired.class);
             Class<?> parameterClass = method.getParameterTypes()[0];
-            Object autowiredBean = autowired.name().isEmpty() ? beanFactory.getBean(parameterClass) : beanFactory.getBean(autowired.name());
+            Object autowiredBean = autowired.name().isEmpty() ? beanRegistry.getBean(parameterClass,plugin) : beanRegistry.getBean(autowired.name(),plugin);
             method.setAccessible(true);
             try {
                 method.invoke(bean, autowiredBean);

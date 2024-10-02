@@ -6,6 +6,7 @@ import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
 import ru.kiscode.kplugdi.context.reader.BeanReader;
+import ru.kiscode.kplugdi.context.scope.BeanScope;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.Modifier;
@@ -38,6 +39,7 @@ public class BeanProcessRegistry {
                 beanDefinitionPostProcessors.add(beanDefinitionPostProcessor);
             }
             if(clazz.isInstance(BeanPostProcessor.class)){
+                if(clazz.isInstance(BeanScope.class)) continue;
                 if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
                 BeanPostProcessor beanPostProcessor = (BeanPostProcessor) classInstance;
                 beanPostProcessors.add(beanPostProcessor);
@@ -55,35 +57,20 @@ public class BeanProcessRegistry {
         }
     }
 
-    public void registerBeanDefinitionPostProcessor(@NonNull BeanDefinitionPostProcessor beanDefinitionPostProcessor) {
+
+    public void registerBeanDefinitionPostProcess(@NonNull BeanDefinitionPostProcessor beanDefinitionPostProcessor){
         beanDefinitionPostProcessors.add(beanDefinitionPostProcessor);
     }
 
-    public void registerBeanPostProcessor(@NonNull BeanPostProcessor beanPostProcessor) {
+    public void registerBeanPostProcess(@NonNull BeanPostProcessor beanPostProcessor){
         beanPostProcessors.add(beanPostProcessor);
     }
 
-    public void registerBeanDefinitionReader(@NonNull BeanDefinitionReader beanDefinitionReader) {
+    public void registerBeanDefinitionReader(@NonNull BeanDefinitionReader beanDefinitionReader){
         beanDefinitionReaders.add(beanDefinitionReader);
     }
 
-    public void registerBeanReader(@NonNull BeanReader beanReader) {
+    public void registerBeanReader(@NonNull BeanReader beanReader){
         beanReaders.add(beanReader);
-    }
-
-    public void removeBeanReader(@NonNull BeanReader beanReader) {
-        beanReaders.remove(beanReader);
-    }
-
-    public void removeBeanDefinitionPostProcessor(@NonNull BeanDefinitionPostProcessor beanDefinitionPostProcessor) {
-        beanDefinitionPostProcessors.remove(beanDefinitionPostProcessor);
-    }
-
-    public void removeBeanPostProcessor(@NonNull BeanPostProcessor beanPostProcessor) {
-        beanPostProcessors.remove(beanPostProcessor);
-    }
-
-    public void removeBeanDefinitionReader(@NonNull BeanDefinitionReader beanDefinitionReader) {
-        beanDefinitionReaders.remove(beanDefinitionReader);
     }
 }

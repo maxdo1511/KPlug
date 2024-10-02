@@ -2,8 +2,10 @@ package ru.kiscode.kplugdi.context.model;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import ru.kiscode.kplugdi.context.factory.BeanFactory;
 
 import java.util.Objects;
+import java.util.Set;
 
 
 @Getter
@@ -14,7 +16,8 @@ public abstract class BeanDefinition {
     private String name;
     private Class<?> beanClass;
     private String scope;
-    private Class<?>[] implementInterfaces;
+    private Set<Class<?>> implementInterfaces;
+    private BeanFactory beanFactory;
 
     @Override
     public boolean equals(Object o) {
