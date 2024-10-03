@@ -14,6 +14,9 @@ import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static ru.kiscode.kplugdi.context.ApplicationContext.logger;
+
 @Getter
 @Setter
 public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
@@ -25,13 +28,12 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
 
     @Override
     public void initialize(@NonNull JavaPlugin plugin) {
-
         //загружаем нужные классы
         Set<Class<?>> classes = new HashSet<>();
         loadAllResources(new PluginDirectoryResourceLoader(plugin), classes);
 
         //регистрируем необходимые процессы, ивенты и конверт классы и выгружаем из контекста наружу
-        beanProcessRegistry.findAndRegisterProcessors(classes);
+        beanProcessRegistry.findAndRegisterProcessors(classes, plugin);
     }
 
     @Override

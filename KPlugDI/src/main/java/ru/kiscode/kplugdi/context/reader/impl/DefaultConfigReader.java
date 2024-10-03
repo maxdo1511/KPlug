@@ -25,6 +25,6 @@ public class DefaultConfigReader implements ConfigReader {
     }
 
     public void readStorage(JavaPlugin plugin) {
-        storage = new Storage(new File(plugin.getDataFolder(), "kplug.yml").getPath());
+        storage = new Storage(plugin,"kplug.yml");
     }
 }

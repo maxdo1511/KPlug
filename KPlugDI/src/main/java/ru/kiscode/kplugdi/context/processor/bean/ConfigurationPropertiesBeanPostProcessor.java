@@ -31,23 +31,19 @@ public class ConfigurationPropertiesBeanPostProcessor implements BeanPostProcess
             }
 
             return bean;
-        }
-        return bean;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
-        Field[] fields = bean.getClass().getDeclaredFields();
-        ConfigReader configReader = getConfigReader(plugin);
-        for (Field field : fields) {
-            field.setAccessible(true);
-            Value value = field.getAnnotation(Value.class);
-            if (value != null) {
-                try {
-                    Object configParam = configReader.readValue(value.value(), field.getType(), null);
-                    field.set(bean, configParam);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Can't access field " + field.getName(), e);
+        } else {
+            Field[] fields = bean.getClass().getDeclaredFields();
+            ConfigReader configReader = getConfigReader(plugin);
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Value value = field.getAnnotation(Value.class);
+                if (value != null) {
+                    try {
+                        Object configParam = configReader.readValue(value.value(), field.getType(), null);
+                        field.set(bean, configParam);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException("Can't access field " + field.getName(), e);
+                    }
                 }
             }
         }

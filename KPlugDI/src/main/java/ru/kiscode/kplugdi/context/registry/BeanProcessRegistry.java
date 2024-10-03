@@ -2,6 +2,8 @@ package ru.kiscode.kplugdi.context.registry;
 
 import lombok.Getter;
 import lombok.NonNull;
+import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
@@ -10,8 +12,12 @@ import ru.kiscode.kplugdi.context.scope.BeanScope;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import static ru.kiscode.kplugdi.context.ApplicationContext.logger;
+
 @Getter
 public class BeanProcessRegistry {
 
@@ -28,29 +34,35 @@ public class BeanProcessRegistry {
         beanReaders = new HashSet<>();
     }
 
-    public void findAndRegisterProcessors(@NonNull Set<Class<?>> classes){
+    public void findAndRegisterProcessors(@NonNull Set<Class<?>> classes, JavaPlugin plugin) {
         this.classes = classes;
         for(Class<?> clazz : classes){
             if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
             Object classInstance = null;
-            if(clazz.isInstance(BeanDefinitionPostProcessor.class)){
-                classInstance = ReflectionUtil.newInstance(clazz);
+            logger.warning("Process class: " + clazz.getName());
+            if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanDefinitionPostProcessor.class)) {
+                classInstance = ReflectionUtil.newInstance(clazz, plugin);
                 BeanDefinitionPostProcessor beanDefinitionPostProcessor = (BeanDefinitionPostProcessor) classInstance;
                 beanDefinitionPostProcessors.add(beanDefinitionPostProcessor);
             }
-            if(clazz.isInstance(BeanPostProcessor.class)){
-                if(clazz.isInstance(BeanScope.class)) continue;
-                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
+            if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanPostProcessor.class)) {
+                if(ReflectionUtil.hasInterface(clazz, BeanScope.class)) {
+                    classInstance = ReflectionUtil.newInstance(clazz, plugin);
+                    BeanScope beanScope = (BeanScope) classInstance;
+                    ApplicationContext.getApplicationContext().getBeanRegistry().getBeanScopes().put(beanScope.getScopeName(), beanScope);
+                    continue;
+                }
+                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz, plugin);
                 BeanPostProcessor beanPostProcessor = (BeanPostProcessor) classInstance;
                 beanPostProcessors.add(beanPostProcessor);
             }
-            if(clazz.isInstance(BeanDefinitionReader.class)){
-                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
+            if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanDefinitionReader.class)) {
+                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz, plugin);
                 BeanDefinitionReader beanDefinitionReader = (BeanDefinitionReader) classInstance;
                 beanDefinitionReaders.add(beanDefinitionReader);
             }
-            if(clazz.isInstance(BeanReader.class)){
-                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz);
+            if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanReader.class)) {
+                if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz, plugin);
                 BeanReader beanReader = (BeanReader) classInstance;
                 beanReaders.add(beanReader);
             }

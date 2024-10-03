@@ -3,22 +3,28 @@ package ru.kiscode.kplugdi.utils;
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import ru.kiscode.kplugdi.KPlugDI;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.nio.file.Files;
 
 public class Storage {
 
+    private final JavaPlugin plugin;
     private final File file;
     @Getter
     private FileConfiguration config;
 
-    public Storage(String name){
-        file = new File(KPlugDI.getInstance().getDataFolder(), name);
+    public Storage(JavaPlugin plugin, String name) {
+        this.plugin = plugin;
+        file = new File(plugin.getDataFolder(), name);
+
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
         try {
             if(!file.exists() && !file.createNewFile()) throw new IOException();
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException("Failed to create file", e);
         }
 
@@ -36,21 +42,15 @@ public class Storage {
     }
 
     public static void savebackup(File source, File dest) throws IOException {
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = Files.newInputStream(source.toPath());
-            os = Files.newOutputStream(dest.toPath());
+        try (
+                InputStream is = Files.newInputStream(source.toPath());
+                OutputStream os = Files.newOutputStream(dest.toPath())
+        ) {
             byte[] buffer = new byte[1024];
             int length;
             while ((length = is.read(buffer)) > 0) {
                 os.write(buffer, 0, length);
             }
-        } finally {
-            assert is != null;
-            is.close();
-            assert os != null;
-            os.close();
         }
-}
+    }
 }

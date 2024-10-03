@@ -3,6 +3,7 @@ package ru.kiscode.kplugdi.context.reader.impl;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.CustomBeanName;
+import ru.kiscode.kplugdi.context.model.impl.ApplicationContextBeanDefinition;
 import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
@@ -21,6 +22,9 @@ public class DefaultBeanReader implements BeanReader {
     public Object createBean(@NonNull BeanDefinition beanDefinition, @NonNull BeanRegistry beanRegistry, @NonNull JavaPlugin plugin) {
         if(beanDefinition instanceof PluginBeanDefinition){
             return ((PluginBeanDefinition) beanDefinition).getPluginInstance();
+        }
+        if (beanDefinition instanceof ApplicationContextBeanDefinition){
+            return ((ApplicationContextBeanDefinition) beanDefinition).getApplicationContext();
         }
         if(beanDefinition instanceof ComponentBeanDefinition){
             ComponentBeanDefinition componentBeanDefinition = (ComponentBeanDefinition) beanDefinition;

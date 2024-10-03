@@ -10,9 +10,10 @@ public interface BeanScope extends BeanPostProcessor {
     Object getBean(Object bean, String beanName, JavaPlugin plugin, BeanRegistry beanRegistry);
 
     String getScopeName();
+
     @Override
     default Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
-        return getBean(bean,beanName,plugin, KPlugDI.getInstance().getBeanRegistry());
+        return getBean(bean, beanName, plugin, KPlugDI.getInstance().getBeanRegistry());
     }
 
 }

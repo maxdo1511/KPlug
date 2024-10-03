@@ -1,10 +1,14 @@
 package ru.kiscode.kplugdi.context.resource.impl;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.annotations.Component;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
+import java.util.List;
 import java.util.Set;
+
+import static ru.kiscode.kplugdi.context.ApplicationContext.logger;
 
 public class PluginDirectoryResourceLoader implements CollectionResourceLoader<Class<?>> {
 
@@ -15,9 +19,11 @@ public class PluginDirectoryResourceLoader implements CollectionResourceLoader<C
     }
 
     @Override
-    public Set<Class<?>> loadResource() {
+    public List<Class<?>> loadResource() {
         ReflectionUtil reflectionUtil = new ReflectionUtil(plugin);
-        return reflectionUtil.getAllClasses();
+        List<Class<?>> classes = reflectionUtil.getAllClasses();
+        logger.warning("PluginDirectoryResourceLoader: " + plugin.getName() + " Found classes: " + classes.size());
+        return classes;
     }
 
 }

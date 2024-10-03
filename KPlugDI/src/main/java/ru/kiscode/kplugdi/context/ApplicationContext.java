@@ -16,23 +16,30 @@ import ru.kiscode.kplugdi.context.initializer.impl.DefaultApplicationContextInit
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.registry.BeanProcessRegistry;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
+import ru.kiscode.kplugdi.utils.Storage;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
 @Getter
 public class ApplicationContext {
 
-    private static final Logger logger = Logger.getLogger(ApplicationContext.class.getName());
-    private static final boolean shouldLog = false;
+    public static final Logger logger = Logger.getLogger(ApplicationContext.class.getName());
+    private static final boolean shouldLog = KPlugDI.getInstance().getConfig().getBoolean("debug", false);
+    @Getter
     private static ApplicationContext applicationContext;
     private final Set<ApplicationContextInitializer> initializers;
+    @Getter
     private final BeanRegistry beanRegistry;
     private final BeanProcessRegistry beanProcessRegistry;
+    private final List<JavaPlugin> plugins;
     @Setter
     private BeanDefinitionFactory beanDefinitionFactory;
     @Setter
+    @Getter
     private BeanFactory beanFactory;
 
     public ApplicationContext() {
@@ -44,15 +51,16 @@ public class ApplicationContext {
         beanProcessRegistry = KPlugDI.getInstance().getBeanProcessRegistry();
         initializers = new HashSet<>();
 
-        initializers.add(new DefaultApplicationContextInitializer(this));
-        beanProcessRegistry.registerBeanPostProcess(new AutowiredBeanPostProcessor(beanRegistry));
-        beanProcessRegistry.registerBeanDefinitionPostProcess(new BeanFactoryInjectDefinitionProcess(beanFactory));
+        plugins = new ArrayList<>();
+
+        addApplicationContextInitializer(new DefaultApplicationContextInitializer(this));
 
         if (shouldLog) {
-            logger.info("ApplicationContext initialized");
+            logger.warning("ApplicationContext initialized");
         }
     }
 
+    // Зачем проход по всем инициализаторам
     public static void run(JavaPlugin plugin) {
         if (applicationContext == null) {
             applicationContext = new ApplicationContext();
@@ -61,20 +69,28 @@ public class ApplicationContext {
             throw new BeanCreatingException("Plugin is null");
         }
 
+        if (shouldLog) {
+            logger.warning("Plugin " + plugin.getName() + " context starting");
+        }
+
         for(ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
             initializer.initialize(plugin);
         }
+        applicationContext.getPlugins().add(plugin);
     }
 
-    public static void refresh(JavaPlugin plugin) {
+    // Выглядит неправильно
+    public static void refresh() {
         if (applicationContext == null) {
             applicationContext = new ApplicationContext();
         }
-        if (plugin == null) {
-            throw new BeanCreatingException("Plugin is null");
-        }
-        for(ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
-            initializer.run(plugin);
+
+        for (JavaPlugin plugin : applicationContext.getPlugins()) {
+            logger.warning("Plugin " + plugin.getName() + " context refreshing");
+            for (ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
+                logger.warning("Plugin " + plugin.getName() + " context refreshing 2");
+                initializer.run(plugin);
+            }
         }
     }
 

@@ -3,7 +3,9 @@ package ru.kiscode.kplugdi.context.reader.impl;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.*;
+import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
+import ru.kiscode.kplugdi.context.model.impl.ApplicationContextBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.PluginBeanDefinition;
@@ -40,6 +42,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
             }
         }
         beanDefinitions.add(getPluginBeanDefinition(plugin));
+        beanDefinitions.add(getApplicationContextBeanDefinition());
         return beanDefinitions;
     }
 
@@ -89,6 +92,16 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
                 .scope("singleton")
                 .build();
 
+    }
+
+    private BeanDefinition getApplicationContextBeanDefinition() {
+        return ApplicationContextBeanDefinition.builder()
+                .applicationContext(ApplicationContext.getApplicationContext())
+                .name(ApplicationContext.class.getName())
+                .beanClass(ApplicationContext.class)
+                .implementInterfaces(new HashSet<>(Arrays.asList(ApplicationContext.class.getInterfaces())))
+                .scope("singleton")
+                .build();
     }
 
     private String getScopeType(@NonNull Class<?> clazz){

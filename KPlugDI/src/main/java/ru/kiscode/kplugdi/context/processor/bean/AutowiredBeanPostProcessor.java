@@ -1,8 +1,8 @@
 package ru.kiscode.kplugdi.context.processor.bean;
 
-import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.Autowired;
+import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
@@ -14,11 +14,7 @@ import java.lang.reflect.Method;
 
 public class AutowiredBeanPostProcessor implements BeanPostProcessor {
 
-    private final BeanRegistry beanRegistry;
-
-    public AutowiredBeanPostProcessor(@NonNull BeanRegistry beanRegistry) {
-        this.beanRegistry = beanRegistry;
-    }
+    private final BeanRegistry beanRegistry = ApplicationContext.getApplicationContext().getBeanRegistry();
 
     //TODO должен запускаться первым
     @Override

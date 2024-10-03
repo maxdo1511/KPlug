@@ -4,7 +4,7 @@ import ru.kiscode.kplugdi.KPlugDI;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
-import java.util.Set;
+import java.util.List;
 
 public class DefaultResourceLoader implements CollectionResourceLoader<Class<?>> {
 
@@ -15,7 +15,7 @@ public class DefaultResourceLoader implements CollectionResourceLoader<Class<?>>
     }
 
     @Override
-    public Set<Class<?>> loadResource() {
+    public List<Class<?>> loadResource() {
         ReflectionUtil reflectionUtil = new ReflectionUtil(path, KPlugDI.class.getClassLoader());
         return reflectionUtil.getAllClasses();
     }
