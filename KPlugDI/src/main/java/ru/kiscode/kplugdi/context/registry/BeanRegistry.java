@@ -8,6 +8,7 @@ import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.scope.BeanScope;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
+import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
 import java.util.*;
 
@@ -54,13 +55,11 @@ public class BeanRegistry {
         if(bean != null) return (T) bean;
         Set<BeanDefinition> implBeanDefinitions = new HashSet<>();
         for(BeanDefinition beanDefinition : beanDefinitionByName.values()){
-            System.out.println(beanDefinition.getBeanClass().getName() + " " + type.getName());
-            if (beanDefinition.getBeanClass().getName().equals(type.getName())) {
-                implBeanDefinitions.add(beanDefinition);
-            }else if(beanDefinition.getImplementInterfaces().contains(type)){
+            if (ReflectionUtil.hasInterfaceOrSuperClass(beanDefinition.getBeanClass(), type)) {
                 implBeanDefinitions.add(beanDefinition);
             }
         }
+        //TODO подумать
         if(implBeanDefinitions.isEmpty()){
             throw new BeanCreatingException("Not found bean for type " + type.getName());
         }
