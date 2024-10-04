@@ -20,8 +20,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static ru.kiscode.kplugdi.context.ApplicationContext.logger;
-
 @Getter
 @Setter
 public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
