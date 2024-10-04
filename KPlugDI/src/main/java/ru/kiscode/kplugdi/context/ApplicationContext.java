@@ -55,6 +55,8 @@ public class ApplicationContext {
 
         addApplicationContextInitializer(new DefaultApplicationContextInitializer(this));
 
+        beanRegistry.addBean(applicationContext, ApplicationContext.class.getName());
+
         if (shouldLog) {
             logger.warning("ApplicationContext initialized");
         }

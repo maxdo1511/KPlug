@@ -15,15 +15,16 @@ public class BeanRegistry {
 
     @Getter
     private final Map<String, BeanScope> beanScopes = new HashMap<>();
-    private final Map<String,BeanDefinition> beanDefinitionByName = new HashMap<>();
-    private final Map<String,Object> singletonBeanByName = new HashMap<>();
+    private final Map<String, BeanDefinition> beanDefinitionByName = new HashMap<>();
+    private final Map<String, Object> singletonBeanByName = new HashMap<>();
 
 
     public void createAndRegistryBeans(@NonNull Set<BeanDefinition> beanDefinitions, @NonNull JavaPlugin plugin){
-        for(BeanDefinition beanDefinition: beanDefinitions){
-            Object bean = createBean(beanDefinition,plugin);
-            singletonBeanByName.put(beanDefinition.getName(),bean);
-            beanDefinitionByName.put(beanDefinition.getName(),beanDefinition);
+        for(BeanDefinition beanDefinition : beanDefinitions){
+            System.out.println("Register bean: " + beanDefinition.getName());
+            Object bean = createBean(beanDefinition, plugin);
+            singletonBeanByName.put(beanDefinition.getName(), bean);
+            beanDefinitionByName.put(beanDefinition.getName(), beanDefinition);
         }
     }
 
@@ -33,28 +34,17 @@ public class BeanRegistry {
         Object bean = beanFactory.createBean(beanDefinition,plugin);
         if (bean == null) throw new BeanCreatingException("BeanFactory return null: " + beanFactory.getClass().getName() + " " + beanDefinition.getName());
 
-        for(BeanPostProcessor processor: beanFactory.getBeanProcessRegistry().getBeanPostProcessors()){
-            bean =  processor.postProcessBeforeInitialization(bean,beanDefinition.getName(),plugin);
-            if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-        }
-
-        for(BeanPostProcessor processor: beanFactory.getBeanProcessRegistry().getBeanPostProcessors()){
-            bean =  processor.postProcessAfterInitialization(bean,beanDefinition.getName(),plugin);
-            if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-        }
-
         // Какая-то поебень
+        /*
         BeanScope beanScope = beanScopes.get(beanDefinition.getScope().toLowerCase(Locale.ENGLISH));
         if(beanScope == null){
             throw new BeanCreatingException("Not found scope class for bean " + beanDefinition.getScope());
         }
         bean = beanScope.postProcessAfterInitialization(bean, beanDefinition.getName(), plugin);
         bean = beanScope.postProcessBeforeInitialization(bean, beanDefinition.getName(), plugin);
+         */
         // Бессмысленная хуйня
 
-        if(bean == null){
-            throw new BeanCreatingException("Filed to create bean " + beanDefinition.getName());
-        }
         return bean;
     }
 
@@ -63,8 +53,11 @@ public class BeanRegistry {
         Object bean = singletonBeanByName.get(type.getName());
         if(bean != null) return (T) bean;
         Set<BeanDefinition> implBeanDefinitions = new HashSet<>();
-        for(BeanDefinition beanDefinition: beanDefinitionByName.values()){
-            if(beanDefinition.getImplementInterfaces().contains(type)){
+        for(BeanDefinition beanDefinition : beanDefinitionByName.values()){
+            System.out.println(beanDefinition.getBeanClass().getName() + " " + type.getName());
+            if (beanDefinition.getBeanClass().getName().equals(type.getName())) {
+                implBeanDefinitions.add(beanDefinition);
+            }else if(beanDefinition.getImplementInterfaces().contains(type)){
                 implBeanDefinitions.add(beanDefinition);
             }
         }
@@ -86,6 +79,10 @@ public class BeanRegistry {
             throw new BeanCreatingException("Bean " + beanName + " not found");
         }
         return (T) createBean(beanDefinition,plugin);
+    }
+
+    public void addBean(@NonNull Object bean, @NonNull String name){
+        singletonBeanByName.put(name,bean);
     }
 
 }

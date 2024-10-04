@@ -41,8 +41,6 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
                 }
             }
         }
-        beanDefinitions.add(getPluginBeanDefinition(plugin));
-        beanDefinitions.add(getApplicationContextBeanDefinition());
         return beanDefinitions;
     }
 
@@ -78,20 +76,6 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
                     .build());
         }
         return beanDefinitions;
-    }
-
-    private BeanDefinition getPluginBeanDefinition(@NonNull JavaPlugin plugin) {
-        Set<Class<?>> implementInterfaces = new HashSet<>(Arrays.asList(plugin.getClass().getInterfaces()));
-        Class<?> superClass = plugin.getClass().getSuperclass();
-        if(superClass != null) implementInterfaces.add(superClass);
-        return PluginBeanDefinition.builder()
-                .pluginInstance(plugin)
-                .name(plugin.getClass().getName())
-                .beanClass(plugin.getClass())
-                .implementInterfaces(implementInterfaces)
-                .scope("singleton")
-                .build();
-
     }
 
     private BeanDefinition getApplicationContextBeanDefinition() {
