@@ -7,6 +7,7 @@ import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
+import ru.kiscode.kplugdi.utils.ValidationUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -19,9 +20,8 @@ public class AutowiredBeanPostProcessor implements BeanPostProcessor {
     //TODO должен запускаться первым
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
-        for(Field field: ReflectionUtil.getAllFields(bean.getClass(), true)){
-            if(!field.isAnnotationPresent(Autowired.class)) continue;
-            ReflectionUtil.isStatic(field, Autowired.class);
+        for(Field field: ReflectionUtil.getAllFieldsAnnotatedWith(bean.getClass(), Autowired.class,true)){
+            ValidationUtil.validateStaticField(field, Autowired.class);
             Autowired autowired = field.getAnnotation(Autowired.class);
             Object autowiredBean = autowired.name().isEmpty() ? beanRegistry.getBean(field.getType(),plugin) : beanRegistry.getBean(autowired.name(),plugin);
             field.setAccessible(true);
@@ -31,11 +31,12 @@ public class AutowiredBeanPostProcessor implements BeanPostProcessor {
                 throw new BeanCreatingException("Can't autowire field << %s >> in class << %s >>", e, field.getName(), bean.getClass().getName());
             }
         }
-        for(Method method: ReflectionUtil.getAllMethods(bean.getClass(), true)){
-            if(!method.isAnnotationPresent(Autowired.class)) continue;
-            ReflectionUtil.isStatic(method,Autowired.class);
-            ReflectionUtil.checkReturnType(method,true, Autowired.class);
-            ReflectionUtil.multiplyParameters(method);
+        for(Method method: ReflectionUtil.getAllMethodsAnnotatedWith(bean.getClass(), Autowired.class,true)){
+            ValidationUtil.validateStaticMethod(method,Autowired.class);
+            ValidationUtil.validateReturnType(method,true, Autowired.class);
+            if (method.getParameterCount() != 1) {
+                throw new BeanCreatingException("@Autowired method << %s >> in class << %s >> should have one parameter.", method.getName(), method.getDeclaringClass().getName());
+            }
             Autowired autowired = method.getAnnotation(Autowired.class);
             Class<?> parameterClass = method.getParameterTypes()[0];
             Object autowiredBean = autowired.name().isEmpty() ? beanRegistry.getBean(parameterClass,plugin) : beanRegistry.getBean(autowired.name(),plugin);

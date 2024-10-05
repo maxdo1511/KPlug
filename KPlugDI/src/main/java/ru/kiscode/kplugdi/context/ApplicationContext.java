@@ -7,8 +7,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.KPlugDI;
 import ru.kiscode.kplugdi.context.factory.BeanFactory;
 import ru.kiscode.kplugdi.context.factory.impl.DefaultBeanFactory;
-import ru.kiscode.kplugdi.context.processor.bean.AutowiredBeanPostProcessor;
-import ru.kiscode.kplugdi.context.processor.definition.BeanFactoryInjectDefinitionProcess;
 import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.factory.BeanDefinitionFactory;
 import ru.kiscode.kplugdi.context.factory.impl.DefaultBeanDefinitionFactory;
@@ -16,7 +14,6 @@ import ru.kiscode.kplugdi.context.initializer.impl.DefaultApplicationContextInit
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.registry.BeanProcessRegistry;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
-import ru.kiscode.kplugdi.utils.Storage;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -55,7 +52,7 @@ public class ApplicationContext {
 
         addApplicationContextInitializer(new DefaultApplicationContextInitializer(this));
 
-        beanRegistry.addBean(applicationContext, ApplicationContext.class.getName());
+        beanRegistry.addSingletonBean(applicationContext, ApplicationContext.class.getName());
 
         if (shouldLog) {
             logger.warning("ApplicationContext initialized");

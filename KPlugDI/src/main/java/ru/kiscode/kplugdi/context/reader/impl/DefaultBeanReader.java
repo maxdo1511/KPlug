@@ -2,7 +2,7 @@ package ru.kiscode.kplugdi.context.reader.impl;
 
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.annotations.CustomBeanName;
+import ru.kiscode.kplugdi.annotations.Qualifier;
 import ru.kiscode.kplugdi.context.model.impl.ApplicationContextBeanDefinition;
 import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
@@ -38,9 +38,9 @@ public class DefaultBeanReader implements BeanReader {
             Parameter[] parameters = method.getParameters();
             for(int i = 0; i < parameters.length; i++){
                 Parameter parameter = parameters[i];
-                Object parameterBean = parameter.isAnnotationPresent(CustomBeanName.class) &&
-                        !parameter.getAnnotation(CustomBeanName.class).name().isEmpty() ?
-                        beanRegistry.getBean(parameter.getAnnotation(CustomBeanName.class).name(),plugin) : beanRegistry.getBean(parameter.getType(),plugin);
+                Object parameterBean = ReflectionUtil.hasAnnotation(parameter, Qualifier.class) &&
+                        !parameter.getAnnotation(Qualifier.class).name().isEmpty() ?
+                        beanRegistry.getBean(parameter.getAnnotation(Qualifier.class).name(),plugin) : beanRegistry.getBean(parameter.getType(),plugin);
                 objects[i] = parameterBean;
             }
             method.setAccessible(true);

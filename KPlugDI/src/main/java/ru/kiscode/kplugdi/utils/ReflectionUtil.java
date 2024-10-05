@@ -4,7 +4,6 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ScanResult;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.kplugdi.annotations.Component;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.lang.annotation.Annotation;
@@ -14,14 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.kiscode.kplugdi.context.ApplicationContext.logger;
-
-
 public class ReflectionUtil {
     private final ScanResult classGraph;
 
     /**
-     * Constructor that initializes a {@link ClassGraph} object to scan the plugin package.
+     * Constructs a {@link ReflectionUtil} instance that initializes a {@link ClassGraph}
+     * object to scan the plugin package.
      *
      * @param plugin The plugin instance used to define the package to scan.
      */
@@ -30,214 +27,193 @@ public class ReflectionUtil {
                 .addClassLoader(plugin.getClass().getClassLoader())
                 .enableClassInfo()
                 .enableAnnotationInfo()
-                .acceptPackages(plugin.getClass().getPackage().getName()).scan();
+                .acceptPackages(plugin.getClass().getPackage().getName())
+                .scan();
     }
 
+    /**
+     * Constructs a {@link ReflectionUtil} instance that initializes a {@link ClassGraph}
+     * object to scan the specified path with the provided class loader.
+     *
+     * @param path       The path to scan for classes.
+     * @param classLoader The class loader to be used for loading classes.
+     */
     public ReflectionUtil(@NonNull String path, @NonNull ClassLoader classLoader) {
         classGraph = new ClassGraph()
                 .addClassLoader(classLoader)
                 .enableClassInfo()
                 .enableAnnotationInfo()
-                .acceptPaths(path).scan();
+                .acceptPaths(path)
+                .scan();
     }
 
+    /**
+     * Returns a list of all classes scanned by the class graph.
+     *
+     * @return A list of all classes.
+     */
     public List<Class<?>> getAllClasses() {
         return classGraph.getAllClasses().loadClasses();
     }
 
     /**
-     * Returns a list of fields annotated with the specified annotation.
+     * Returns a list of fields in the specified class that are annotated with the given annotation.
      *
-     * @param clazz      The class whose fields are to be checked.
-     * @param annotation The annotation that fields are checked against.
+     * @param clazz          The class whose fields are to be checked.
+     * @param annotation     The annotation that fields are checked against.
+     * @param checkSuperClass Whether to check the superclass of the class.
      * @return A list of fields annotated with the specified annotation.
      */
-    public List<Field> getFieldsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
-        return Arrays.stream(clazz.getDeclaredFields())
+    public static List<Field> getAllFieldsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation, boolean checkSuperClass) {
+        return getAllFields(clazz, checkSuperClass).stream()
                 .filter(f -> f.isAnnotationPresent(annotation))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Returns a list of methods annotated with the specified annotation.
+     * Returns a list of methods in the specified class that are annotated with the given annotation.
      *
-     * @param clazz      The class whose methods are to be checked.
-     * @param annotation The annotation that methods are checked against.
+     * @param clazz          The class whose methods are to be checked.
+     * @param annotation     The annotation that methods are checked against.
+     * @param checkSuperClass Whether to check the superclass of the class.
      * @return A list of methods annotated with the specified annotation.
      */
-    public List<Method> getMethodsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
-        return Arrays.stream(clazz.getDeclaredMethods())
-                .filter(f -> f.isAnnotationPresent(annotation))
+    public static List<Method> getAllMethodsAnnotatedWith(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation, boolean checkSuperClass) {
+        return getAllMethods(clazz, checkSuperClass).stream()
+                .filter(m -> m.isAnnotationPresent(annotation))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Returns a set of all plugin classes annotated with the specified annotation.
+     * Returns a list of all plugin classes annotated with the specified annotation.
      *
      * @param annotation The annotation that classes are checked against.
-     * @return A set of classes annotated with the specified annotation.
+     * @return A list of classes annotated with the specified annotation.
      */
     public List<Class<?>> getClassesAnnotatedWith(@NonNull Class<? extends Annotation> annotation) {
         return classGraph.getClassesWithAnnotation(annotation.getName()).loadClasses();
     }
 
     /**
-     * Checks if the element is static.
+     * Creates a new instance of the specified class, attempting to match constructor parameters.
      *
-     * @param modifiers The element's modifiers.
-     * @return {@code true} if the element is static, {@code false} otherwise.
+     * @param clazz The class to instantiate.
+     * @param args  The arguments to pass to the constructor.
+     * @return A new instance of the specified class.
      */
-    public boolean isStatic(int modifiers) {
-        return Modifier.isStatic(modifiers);
-    }
-
-    /**
-     * Checks if the method has exactly one parameter.
-     *
-     * @param method The method to be checked.
-     * @return {@code true} if the method does not have exactly one parameter, {@code false} otherwise.
-     */
-    public boolean isNotOneParameter(@NonNull Method method) {
-        return method.getParameterCount() != 1;
-    }
-
-    /**
-     * Checks if the method returns {@code void}.
-     *
-     * @param method The method to be checked.
-     * @return {@code true} if the method returns {@code void}, {@code false} otherwise.
-     */
-    public boolean isVoidMethod(@NonNull Method method) {
-        return method.getReturnType() == void.class;
-    }
-
     public static Object newInstance(@NonNull Class<?> clazz, Object... args) {
         try {
-            Constructor<?> constructor = null;
-            int len = args == null ? 0 : args.length;
-            for (Constructor<?> declaredConstructor : clazz.getDeclaredConstructors()) {
-                if (declaredConstructor.getParameterCount() == 0) {
-                    constructor = declaredConstructor;
-                    break;
-                } else if (declaredConstructor.getParameterCount() == len) {
-                    constructor = declaredConstructor;
-                }
-            }
-            if (constructor == null) {
-                throw new BeanCreatingException("Error creating class << %s >>. Must have a empty constructor or a constructor with %s arguments.", clazz.getName(), len);
-            }
-            if (constructor.getParameterCount() > 0) {
-                return constructor.newInstance(args);
-            } else {
-                return constructor.newInstance();
-            }
+            Constructor<?> constructor = findConstructor(clazz, args);
+            return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new BeanCreatingException("Error creating class << %s >>. Must have a public empty constructor.",e, clazz.getName());
+            throw new BeanCreatingException("Error creating class << %s >>. Must have a public empty constructor.", e, clazz.getName());
         }
     }
 
-    public static void isStatic(@NonNull Field field, @NonNull Class<? extends Annotation> annotation) {
-        if (Modifier.isStatic(field.getModifiers())) {
-            throw new BeanCreatingException("%s field << %s >> cannot be static.",annotation.getSimpleName(),field.getName());
+    /**
+     * Finds a suitable constructor in the specified class that matches the given arguments.
+     *
+     * @param clazz The class to search for a constructor.
+     * @param args  The arguments to match against the constructor parameters.
+     * @return A constructor that matches the given arguments.
+     */
+    private static Constructor<?> findConstructor(@NonNull Class<?> clazz, Object... args) {
+        int len = args == null ? 0 : args.length;
+        for (Constructor<?> declaredConstructor : clazz.getDeclaredConstructors()) {
+            if (declaredConstructor.getParameterCount() == 0 || declaredConstructor.getParameterCount() == len) {
+                return declaredConstructor;
+            }
         }
+        throw new BeanCreatingException("Error creating class << %s >>. Must have an empty constructor or a constructor with %s arguments.", clazz.getName(), len);
     }
 
+    /**
+     * Returns all fields declared in the specified class, optionally including those from superclasses.
+     *
+     * @param clazz         The class to retrieve fields from.
+     * @param checkSuperClass Whether to include fields from the superclass.
+     * @return A list of fields in the specified class.
+     */
     public static List<Field> getAllFields(@NonNull Class<?> clazz, boolean checkSuperClass) {
         List<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
-        Class<?> superClass = clazz.getSuperclass();
-        if (superClass != null && checkSuperClass) {
-            fields.addAll(getAllFields(superClass, true));
+        if (checkSuperClass) {
+            Class<?> superClass = clazz.getSuperclass();
+            while (superClass != null) {
+                fields.addAll(Arrays.asList(superClass.getDeclaredFields()));
+                superClass = superClass.getSuperclass();
+            }
         }
         return fields;
     }
 
+    /**
+     * Returns all methods declared in the specified class, optionally including those from superclasses.
+     *
+     * @param clazz          The class to retrieve methods from.
+     * @param checkSuperClass Whether to include methods from the superclass.
+     * @return A list of methods in the specified class.
+     */
     public static List<Method> getAllMethods(@NonNull Class<?> clazz, boolean checkSuperClass) {
         List<Method> methods = new ArrayList<>(Arrays.asList(clazz.getDeclaredMethods()));
-        Class<?> superClass = clazz.getSuperclass();
-        if (superClass != null && checkSuperClass) {
-            methods.addAll(getAllMethods(superClass, true));
+        if (checkSuperClass) {
+            Class<?> superClass = clazz.getSuperclass();
+            while (superClass != null) {
+                methods.addAll(Arrays.asList(superClass.getDeclaredMethods()));
+                superClass = superClass.getSuperclass();
+            }
         }
         return methods;
     }
 
-    public static boolean hasAnnotation(@NonNull Class<?> clazz, @NonNull Class<? extends Annotation> annotation) {
-        return clazz.isAnnotationPresent(annotation);
+    /**
+     * Checks if the specified element has the specified annotation.
+     *
+     * @param element The element to check.
+     * @param annotation The annotation to check for.
+     * @return {@code true} if the element has the specified annotation; {@code false} otherwise.
+     */
+    public static boolean hasAnnotation(@NonNull AnnotatedElement element, @NonNull Class<? extends Annotation> annotation) {
+        return element.isAnnotationPresent(annotation);
     }
 
-    public static boolean hasAnnotation(@NonNull Method method, @NonNull Class<? extends Annotation> annotation) {
-        return method.isAnnotationPresent(annotation);
-    }
-    public static void isStatic(@NonNull Method method, @NonNull Class<? extends Annotation> annotation) {
-        if(Modifier.isStatic(method.getModifiers())){
-            throw new BeanCreatingException("%s method << %s >> in class << %s >> cannot be static.",annotation.getSimpleName(),method.getName(),method.getDeclaringClass().getName());
-        }
-    }
+    /**
+     * Checks if the specified class has the specified interface or superclass.
+     *
+     * @param clazz  The class to check.
+     * @param aClass The interface or superclass to check for.
+     * @return {@code true} if the class has the specified interface or superclass; {@code false} otherwise.
+     */
+    public static boolean hasInterfaceOrSuperClass(Class<?> clazz, Class<?> aClass) {
+        if (clazz == null || aClass == null) return false;
 
-    public static void checkReturnType(@NonNull Method method, boolean shouldBeVoid, @NonNull Class<? extends Annotation> annotation) {
-        if(shouldBeVoid && method.getReturnType() != void.class){
-            throw new BeanCreatingException("%s method << %s >> in class << %s >> should be void. method.",annotation.getSimpleName(),method.getName(), method.getDeclaringClass().getName());
-        }
-        if(!shouldBeVoid && method.getReturnType() == void.class){
-            throw new BeanCreatingException("%s method << %s >> in class << %s >> should not be void. method.",annotation.getSimpleName(),method.getName(), method.getDeclaringClass().getName());
-        }
-    }
+        if (hasInterface(clazz, aClass)) return true;
 
-    public static void multiplyParameters(@NonNull Method method){
-        if(method.getParameterCount() != 1){
-            throw new BeanCreatingException("@Autowired method << %s >> in class << %s >> should have one parameter.",method.getName(), method.getDeclaringClass().getName());
-        }
-    }
-
-    public static void isInterfaceOrAbstract(@NonNull Class<?> clazz){
-        if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())){
-            throw new BeanCreatingException("class << %s >> can't be interface or abstract", clazz.getName());
-        }
-    }
-
-    public static boolean hasInterfaceOrSuperClass(@NonNull Class<?> clazz, @NonNull Class<?> aClass) {
-        // Проверка на null
-        if (clazz == null || aClass == null) {
-            return false;
-        }
-
-        // Проверка, реализует ли класс интерфейс
-        if (hasInterface(clazz, aClass)) {
-            return true; // Если нашли нужный интерфейс
-        }
-
-        // Проверка на суперклассы
         Class<?> superClass = clazz.getSuperclass();
         while (superClass != null) {
-            if (superClass.equals(aClass) || hasInterface(superClass, aClass)) {
-                return true; // Если нашли нужный класс или интерфейс в иерархии
-            }
-            superClass = superClass.getSuperclass(); // Переходим к родительскому классу
+            if (superClass.equals(aClass) || hasInterface(superClass, aClass)) return true;
+            superClass = superClass.getSuperclass();
         }
 
-        // Проверка интерфейсов
-        for (Class<?> interfaceClass : clazz.getInterfaces()) {
-            if (interfaceClass.equals(aClass) || hasInterfaceOrSuperClass(interfaceClass, aClass)) {
-                return true; // Если нашли нужный интерфейс
-            }
-            // Рекурсивно проверяем интерфейсы, которые наследует текущий интерфейс
-            for (Class<?> superInterface : interfaceClass.getInterfaces()) {
-                if (hasInterfaceOrSuperClass(superInterface, aClass)) {
-                    return true;
-                }
-            }
-        }
-
-        return false; // Если ничего не найдено
+        return Arrays.stream(clazz.getInterfaces()).anyMatch(interfaceClass -> interfaceClass.equals(aClass) || hasInterfaceOrSuperClass(interfaceClass, aClass));
     }
 
-    // Метод для проверки, реализует ли класс интерфейс
+    /**
+     * Checks if the specified class implements the given interface.
+     *
+     * @param clazz  The class to check.
+     * @param aClass The interface to check for.
+     * @return {@code true} if the class implements the specified interface; {@code false} otherwise.
+     */
     public static boolean hasInterface(@NonNull Class<?> clazz, @NonNull Class<?> aClass) {
-        for (Class<?> interfaceClass : clazz.getInterfaces()) {
-            if (interfaceClass.equals(aClass)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.asList(clazz.getInterfaces()).contains(aClass);
+    }
+
+    /**
+     * Checks if the specified class is an abstract or an interface.
+     * @param clazz The class to check.
+     * @return {@code true} if the class is an abstract or an interface; {@code false} otherwise.
+     */
+    public static boolean isAbstractOrInterface(@NonNull Class<?> clazz) {
+        return clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers());
     }
 }
-

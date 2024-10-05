@@ -3,6 +3,7 @@ package ru.kiscode.kplugdi.context.registry;
 import lombok.Getter;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.kiscode.kplugdi.annotations.IgnoreContext;
 import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.processor.BeanDefinitionPostProcessor;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
@@ -11,8 +12,6 @@ import ru.kiscode.kplugdi.context.reader.BeanReader;
 import ru.kiscode.kplugdi.context.scope.BeanScope;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,7 +24,7 @@ public class BeanProcessRegistry {
     private final Set<BeanPostProcessor> beanPostProcessors;
     private final Set<BeanDefinitionReader> beanDefinitionReaders;
     private final Set<BeanReader> beanReaders;
-    private Set<Class<?>> classes;
+    private Set<Class<?>> loadedClasses;
 
     public BeanProcessRegistry(){
         beanDefinitionPostProcessors = new HashSet<>();
@@ -35,9 +34,9 @@ public class BeanProcessRegistry {
     }
 
     public void findAndRegisterProcessors(@NonNull Set<Class<?>> classes, JavaPlugin plugin) {
-        this.classes = classes;
+        this.loadedClasses = classes;
         for(Class<?> clazz : classes){
-            if(clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) continue;
+            if(ReflectionUtil.isAbstractOrInterface(clazz) || ReflectionUtil.hasAnnotation(clazz, IgnoreContext.class)) continue;
             Object classInstance = null;
             logger.warning("Process class: " + clazz.getName());
             if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanDefinitionPostProcessor.class)) {
@@ -85,4 +84,6 @@ public class BeanProcessRegistry {
     public void registerBeanReader(@NonNull BeanReader beanReader){
         beanReaders.add(beanReader);
     }
+
+
 }

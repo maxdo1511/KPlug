@@ -6,15 +6,12 @@ import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.ComponentScan;
 import ru.kiscode.kplugdi.context.ApplicationContext;
-import ru.kiscode.kplugdi.context.factory.BeanFactory;
 import ru.kiscode.kplugdi.context.initializer.ApplicationContextInitializer;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.PluginBeanDefinition;
-import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.DefaultResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
-import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,7 +39,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
     @Override
     public void run(@NonNull JavaPlugin plugin) {
         //создаем beanDefinitions
-        Set<BeanDefinition> beanDefinitions = new HashSet<>(applicationContext.getBeanDefinitionFactory().createBeanDefinitions(plugin));
+        Set<BeanDefinition> beanDefinitions = new HashSet<>(beanDefinitionFactory.createBeanDefinitions(plugin));
 
         // плагин как бин
         beanDefinitions.add(getPluginBeanDefinition(plugin));
@@ -53,29 +50,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
                         .forEach(beanDefinitionPostProcessor -> beanDefinitionPostProcessor.postProcess(beanDefinition)));
 
         //создаем бины
-        applicationContext.getBeanRegistry().createAndRegistryBeans(beanDefinitions, plugin);
-
-        // проходим по пост процессорам before initialization
-        for (BeanDefinition beanDefinition : beanDefinitions) {
-            BeanFactory beanFactory = beanDefinition.getBeanFactory();
-            Object bean = ApplicationContext.getApplicationContext().getBeanRegistry().getBean(beanDefinition.getName(), plugin);
-
-            for(BeanPostProcessor processor: beanFactory.getBeanProcessRegistry().getBeanPostProcessors()){
-                bean =  processor.postProcessBeforeInitialization(bean,beanDefinition.getName(), plugin);
-                if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-            }
-        }
-
-        // проходит по пост процессорам after initialization
-        for (BeanDefinition beanDefinition : beanDefinitions) {
-            BeanFactory beanFactory = beanDefinition.getBeanFactory();
-            Object bean = ApplicationContext.getApplicationContext().getBeanRegistry().getBean(beanDefinition.getName(), plugin);
-
-            for(BeanPostProcessor processor: beanFactory.getBeanProcessRegistry().getBeanPostProcessors()){
-                bean =  processor.postProcessAfterInitialization(bean,beanDefinition.getName(), plugin);
-                if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-            }
-        }
+        beanRegistry.createAndRegistryBeans(beanDefinitions, plugin);
     }
 
     private void loadAllResources(@NonNull CollectionResourceLoader<Class<?>> resourceLoader, @NonNull Set<Class<?>> classes) {

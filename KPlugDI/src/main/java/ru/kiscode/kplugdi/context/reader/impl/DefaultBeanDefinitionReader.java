@@ -3,15 +3,13 @@ package ru.kiscode.kplugdi.context.reader.impl;
 import lombok.NonNull;
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.annotations.*;
-import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;
-import ru.kiscode.kplugdi.context.model.impl.ApplicationContextBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ComponentBeanDefinition;
 import ru.kiscode.kplugdi.context.model.impl.ConfigurationBeanDefinition;
-import ru.kiscode.kplugdi.context.model.impl.PluginBeanDefinition;
 import ru.kiscode.kplugdi.context.reader.BeanDefinitionReader;
 import ru.kiscode.kplugdi.exception.BeanCreatingException;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
+import ru.kiscode.kplugdi.utils.ValidationUtil;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -28,13 +26,14 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
 
     @Override
     public Set<BeanDefinition> createBeanDefinition(@NonNull Class<?> clazz){
-        ReflectionUtil.isInterfaceOrAbstract(clazz);
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
-        if(clazz.isAnnotationPresent(Component.class)){
+        if(ReflectionUtil.hasAnnotation(clazz, Component.class)){
+            ValidationUtil.validateClassIfAbstractOrInterface(clazz);
             BeanDefinition beanDefinition = getComponentBeanDefinition(clazz);
             beanDefinitions.add(beanDefinition);
         }
-        if(clazz.isAnnotationPresent(BeanConfiguration.class)){
+        if(ReflectionUtil.hasAnnotation(clazz, BeanConfiguration.class)){
+            ValidationUtil.validateClassIfAbstractOrInterface(clazz);
             for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz)){
                 if(!beanDefinitions.add(beanDefinition)){
                     throw new BeanCreatingException("bean with name << %s >> already exists in context. Please change bean name", beanDefinition.getName());
@@ -45,9 +44,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
     }
 
     private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz){
-        String componentName = clazz.isAnnotationPresent(CustomBeanName.class) &&
-                !clazz.getAnnotation(CustomBeanName.class).name().isEmpty() ?
-                clazz.getAnnotation(CustomBeanName.class).name() : clazz.getName();
+        String componentName = ValidationUtil.validateQualifier(clazz,clazz.getName());
         Set<Class<?>> implementInterfaces = new HashSet<>(Arrays.asList(clazz.getInterfaces()));
         Class<?> superClass = clazz.getSuperclass();
         if(superClass != null) implementInterfaces.add(superClass);
@@ -61,12 +58,10 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
 
     private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
-        for(Method method: ReflectionUtil.getAllMethods(clazz,false)){
-            ReflectionUtil.isStatic(method,Bean.class);
-            ReflectionUtil.checkReturnType(method,false,Bean.class);
-            String beanName = method.isAnnotationPresent(CustomBeanName.class) &&
-                    !method.getAnnotation(CustomBeanName.class).name().isEmpty() ?
-                    method.getAnnotation(CustomBeanName.class).name() : plugin.getName() + "." + method.getName();
+        for(Method method: ReflectionUtil.getAllMethodsAnnotatedWith(clazz,Bean.class,true)){
+            ValidationUtil.validateStaticMethod(method,Bean.class);
+            ValidationUtil.validateReturnType(method,false,Bean.class);
+            String beanName = ValidationUtil.validateQualifier(method,plugin.getName() + "." + method.getName());
             beanDefinitions.add(ConfigurationBeanDefinition.builder()
                     .name(beanName)
                     .beanClass(method.getReturnType())
@@ -78,18 +73,9 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    private BeanDefinition getApplicationContextBeanDefinition() {
-        return ApplicationContextBeanDefinition.builder()
-                .applicationContext(ApplicationContext.getApplicationContext())
-                .name(ApplicationContext.class.getName())
-                .beanClass(ApplicationContext.class)
-                .implementInterfaces(new HashSet<>(Arrays.asList(ApplicationContext.class.getInterfaces())))
-                .scope("singleton")
-                .build();
-    }
 
     private String getScopeType(@NonNull Class<?> clazz){
-        if(clazz.isAnnotationPresent(Scope.class)){
+        if(ReflectionUtil.hasAnnotation(clazz,Scope.class)){
             return clazz.getAnnotation(Scope.class).value();
         }
         return "singleton";

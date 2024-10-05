@@ -17,7 +17,7 @@ public class DefaultBeanDefinitionFactory extends BeanDefinitionFactory {
     @Override
     public Set<BeanDefinition> createBeanDefinitions(@NonNull JavaPlugin plugin) {
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
-        for(Class<?> clazz : beanProcessRegistry.getClasses()){
+        for(Class<?> clazz : beanProcessRegistry.getLoadedClasses()){
             logger.warning("DefaultBeanDefinitionFactory: " + clazz.getName());
             for(BeanDefinitionReader reader : beanProcessRegistry.getBeanDefinitionReaders()){
                 logger.warning("BeanDefinitionReader: " + reader.getClass().getName());
