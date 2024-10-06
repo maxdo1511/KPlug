@@ -18,23 +18,18 @@ import java.util.Set;
 
 public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
 
-    private final JavaPlugin plugin;
-
-    public DefaultBeanDefinitionReader(@NonNull JavaPlugin plugin){
-        this.plugin = plugin;
-    }
-
     @Override
-    public Set<BeanDefinition> createBeanDefinition(@NonNull Class<?> clazz){
+    public Set<BeanDefinition> createBeanDefinition(@NonNull Class<?> clazz, @NonNull JavaPlugin plugin) {
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
+        if (clazz.isAnnotation()) return beanDefinitions;
         if(ReflectionUtil.hasAnnotation(clazz, Component.class)){
             ValidationUtil.validateClassIfAbstractOrInterface(clazz);
-            BeanDefinition beanDefinition = getComponentBeanDefinition(clazz);
+            BeanDefinition beanDefinition = getComponentBeanDefinition(clazz, plugin);
             beanDefinitions.add(beanDefinition);
         }
         if(ReflectionUtil.hasAnnotation(clazz, BeanConfiguration.class)){
             ValidationUtil.validateClassIfAbstractOrInterface(clazz);
-            for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz)){
+            for(BeanDefinition beanDefinition: getConfigurationBeanDefinition(clazz, plugin)){
                 if(!beanDefinitions.add(beanDefinition)){
                     throw new BeanCreatingException("bean with name << %s >> already exists in context. Please change bean name", beanDefinition.getName());
                 }
@@ -43,20 +38,21 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz){
+    private BeanDefinition getComponentBeanDefinition(@NonNull Class<?> clazz, @NonNull JavaPlugin plugin){
         String componentName = ValidationUtil.validateQualifier(clazz,clazz.getName());
         Set<Class<?>> implementInterfaces = new HashSet<>(Arrays.asList(clazz.getInterfaces()));
         Class<?> superClass = clazz.getSuperclass();
         if(superClass != null) implementInterfaces.add(superClass);
         return ComponentBeanDefinition.builder()
                 .name(componentName)
+                .plugin(plugin)
                 .beanClass(clazz)
                 .implementInterfaces(implementInterfaces)
                 .scope(getScopeType(clazz))
                 .build();
     }
 
-    private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz){
+    private Set<BeanDefinition> getConfigurationBeanDefinition(@NonNull Class<?> clazz, @NonNull JavaPlugin plugin){
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Method method: ReflectionUtil.getAllMethodsAnnotatedWith(clazz,Bean.class,true)){
             ValidationUtil.validateStaticMethod(method,Bean.class);
@@ -64,6 +60,7 @@ public class DefaultBeanDefinitionReader implements BeanDefinitionReader {
             String beanName = ValidationUtil.validateQualifier(method,plugin.getName() + "." + method.getName());
             beanDefinitions.add(ConfigurationBeanDefinition.builder()
                     .name(beanName)
+                    .plugin(plugin)
                     .beanClass(method.getReturnType())
                     .implementInterfaces(new HashSet<>(Arrays.asList(method.getReturnType().getInterfaces())))
                     .scope(getScopeType(method.getReturnType()))

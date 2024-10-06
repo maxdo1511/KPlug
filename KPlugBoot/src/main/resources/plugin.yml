@@ -1,0 +1,8 @@
+name: KPlugBoot
+version: '${project.version}'
+main: ru.kiscode.kplugboot.KPlugBoot
+prefix: KPlugBoot
+author: Kisapa
+load: STARTUP
+depend:
+  - KPlugDI

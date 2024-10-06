@@ -24,9 +24,23 @@ public class BeanRegistry {
         this.beanProcessRegistry = beanProcessRegistry;
     }
 
-    public void createAndRegistryBeans(@NonNull Set<BeanDefinition> beanDefinitions, @NonNull JavaPlugin plugin){
+    public void createAndRegistryBeans(@NonNull List<BeanDefinition> beanDefinitions, @NonNull JavaPlugin plugin) {
+        beanDefinitions.stream().map(BeanDefinition::getName).forEach(System.out::println);
         for(BeanDefinition beanDefinition : beanDefinitions){
             registerBean(beanDefinition, plugin);
+        }
+        for (Object bean : singletonBeanByName.values()) {
+            for (BeanPostProcessor beanPostProcessor : beanProcessRegistry.getBeanPostProcessors()) {
+                beanPostProcessor.postProcessBeforeInitialization(bean, bean.getClass().getName(), plugin);
+            }
+        }
+
+        // init method
+
+        for (Object bean : singletonBeanByName.values()) {
+            for (BeanPostProcessor beanPostProcessor : beanProcessRegistry.getBeanPostProcessors()) {
+                beanPostProcessor.postProcessAfterInitialization(bean, bean.getClass().getName(), plugin);
+            }
         }
     }
 
@@ -35,17 +49,6 @@ public class BeanRegistry {
         if(beanFactory == null) throw new BeanCreatingException("Bean " + beanDefinition.getName() + " has no beanFactory");
         Object bean = beanFactory.createBean(beanDefinition,plugin);
         if (bean == null) throw new BeanCreatingException("BeanFactory return null: " + beanFactory.getClass().getName() + " " + beanDefinition.getName());
-
-        for(BeanPostProcessor processor: beanProcessRegistry.getBeanPostProcessors()){
-            bean =  processor.postProcessBeforeInitialization(bean,beanDefinition.getName(), plugin);
-            if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-        }
-
-        for(BeanPostProcessor processor: beanProcessRegistry.getBeanPostProcessors()){
-            bean =  processor.postProcessAfterInitialization(bean,beanDefinition.getName(), plugin);
-            if (bean == null) throw new BeanCreatingException("BeanPostProcessor return null: " + processor.getClass().getName());
-        }
-
 
         // Какая-то поебень
         /*
@@ -66,8 +69,9 @@ public class BeanRegistry {
         Object bean = singletonBeanByName.get(type.getName());
         if(bean != null) return (T) bean;
 
+        // Что за бред??
         BeanDefinition beanDefinition = beanDefinitionByName.get(type.getName());
-        if(beanDefinition != null) return (T) createBean(beanDefinition,plugin);
+        if(beanDefinition != null) return (T) createBean(beanDefinition, plugin);
 
         Set<BeanDefinition> implBeanDefinitions = new HashSet<>();
         for(BeanDefinition bd : beanDefinitionByName.values()){
@@ -103,6 +107,8 @@ public class BeanRegistry {
         System.out.println("Register bean: " + beanDefinition.getName());
         beanDefinitionByName.put(beanDefinition.getName(), beanDefinition);
         Object bean = createBean(beanDefinition, plugin);
+
+        // pre init
 
         //Scope процесс. Возможно где-то тут можно сделать? Хотя хз
         if(beanDefinition.getScope().equalsIgnoreCase("singleton")){

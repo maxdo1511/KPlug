@@ -29,5 +29,4 @@ public abstract class ApplicationContextInitializer {
     public abstract void initialize(@NonNull JavaPlugin plugin);
     public abstract void run(@NonNull JavaPlugin plugin);
 
-
 }

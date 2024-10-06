@@ -21,7 +21,7 @@ public class DefaultBeanReader implements BeanReader {
     @Override
     public Object createBean(@NonNull BeanDefinition beanDefinition, @NonNull BeanRegistry beanRegistry, @NonNull JavaPlugin plugin) {
         if(beanDefinition instanceof PluginBeanDefinition){
-            return ((PluginBeanDefinition) beanDefinition).getPluginInstance();
+            return beanDefinition.getPlugin();
         }
         if (beanDefinition instanceof ApplicationContextBeanDefinition){
             return ((ApplicationContextBeanDefinition) beanDefinition).getApplicationContext();

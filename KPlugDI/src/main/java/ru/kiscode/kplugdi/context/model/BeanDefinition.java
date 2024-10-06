@@ -2,6 +2,7 @@ package ru.kiscode.kplugdi.context.model;
 
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.context.factory.BeanFactory;
 
 import java.util.Objects;
@@ -18,6 +19,7 @@ public abstract class BeanDefinition {
     private String scope;
     private Set<Class<?>> implementInterfaces;
     private BeanFactory beanFactory;
+    private JavaPlugin plugin;
 
     @Override
     public boolean equals(Object o) {

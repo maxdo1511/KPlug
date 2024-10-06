@@ -1,4 +1,4 @@
-package ru.kiscode.commands.interfaces;
+package ru.kiscode.kplugboot.interfaces;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;

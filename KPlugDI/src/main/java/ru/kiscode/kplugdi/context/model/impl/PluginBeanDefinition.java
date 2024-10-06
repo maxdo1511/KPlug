@@ -10,5 +10,4 @@ import ru.kiscode.kplugdi.context.model.BeanDefinition;
 @Setter
 @SuperBuilder
 public class PluginBeanDefinition extends BeanDefinition {
-    private JavaPlugin pluginInstance;
 }

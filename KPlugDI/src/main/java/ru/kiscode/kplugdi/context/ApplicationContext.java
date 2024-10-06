@@ -72,10 +72,10 @@ public class ApplicationContext {
             logger.warning("Plugin " + plugin.getName() + " context starting");
         }
 
+        applicationContext.getPlugins().add(plugin);
         for(ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
             initializer.initialize(plugin);
         }
-        applicationContext.getPlugins().add(plugin);
     }
 
     // Выглядит неправильно
@@ -84,10 +84,12 @@ public class ApplicationContext {
             applicationContext = new ApplicationContext();
         }
 
+        if (shouldLog) {
+            logger.warning("ApplicationContext refreshing");
+        }
+
         for (JavaPlugin plugin : applicationContext.getPlugins()) {
-            logger.warning("Plugin " + plugin.getName() + " context refreshing");
             for (ApplicationContextInitializer initializer : applicationContext.getInitializers()) {
-                logger.warning("Plugin " + plugin.getName() + " context refreshing 2");
                 initializer.run(plugin);
             }
         }

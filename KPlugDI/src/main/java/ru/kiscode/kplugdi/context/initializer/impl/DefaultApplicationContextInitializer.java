@@ -13,13 +13,14 @@ import ru.kiscode.kplugdi.context.resource.CollectionResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.DefaultResourceLoader;
 import ru.kiscode.kplugdi.context.resource.impl.PluginDirectoryResourceLoader;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 public class DefaultApplicationContextInitializer extends ApplicationContextInitializer {
+
+    private List<BeanDefinition> beanDefinitions = new ArrayList<>();
 
     public DefaultApplicationContextInitializer(@NonNull ApplicationContext applicationContext) {
         super(applicationContext);
@@ -34,15 +35,18 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
 
         //регистрируем необходимые процессы, ивенты и конверт классы и выгружаем из контекста наружу
         beanProcessRegistry.findAndRegisterProcessors(classes, plugin);
+
+        // плагин как бин
+        beanDefinitions.add(getPluginBeanDefinition(plugin));
+
+        //прочие бины
+        beanDefinitions.addAll(beanDefinitionFactory.createBeanDefinitions(plugin));
     }
 
     @Override
     public void run(@NonNull JavaPlugin plugin) {
         //создаем beanDefinitions
-        Set<BeanDefinition> beanDefinitions = new HashSet<>(beanDefinitionFactory.createBeanDefinitions(plugin));
-
-        // плагин как бин
-        beanDefinitions.add(getPluginBeanDefinition(plugin));
+        List<BeanDefinition> beanDefinitions = this.beanDefinitions.stream().filter(bd -> bd.getPlugin().getName().equals(plugin.getName())).collect(Collectors.toList());
 
         //ивент BeanDefinitionPostProcess
         beanDefinitions
@@ -72,7 +76,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
         Class<?> superClass = plugin.getClass().getSuperclass();
         if(superClass != null) implementInterfaces.add(superClass);
         return PluginBeanDefinition.builder()
-                .pluginInstance(plugin)
+                .plugin(plugin)
                 .name(plugin.getClass().getName())
                 .beanClass(plugin.getClass())
                 .implementInterfaces(implementInterfaces)

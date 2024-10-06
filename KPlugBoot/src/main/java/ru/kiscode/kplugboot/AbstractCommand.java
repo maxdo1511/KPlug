@@ -1,4 +1,4 @@
-package ru.kiscode.commands;
+package ru.kiscode.kplugboot;
 
 import org.bukkit.command.*;
 import org.bukkit.plugin.java.JavaPlugin;

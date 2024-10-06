@@ -8,9 +8,7 @@ import ru.kiscode.kplugdi.exception.BeanCreatingException;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReflectionUtil {
@@ -104,6 +102,10 @@ public class ReflectionUtil {
     public static Object newInstance(@NonNull Class<?> clazz, Object... args) {
         try {
             Constructor<?> constructor = findConstructor(clazz, args);
+            System.out.println(constructor.getParameterCount());
+            if (constructor.getParameterCount() == 0) {
+                return constructor.newInstance();
+            }
             return constructor.newInstance(args);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new BeanCreatingException("Error creating class << %s >>. Must have a public empty constructor.", e, clazz.getName());
@@ -119,9 +121,9 @@ public class ReflectionUtil {
      */
     private static Constructor<?> findConstructor(@NonNull Class<?> clazz, Object... args) {
         int len = args == null ? 0 : args.length;
-        for (Constructor<?> declaredConstructor : clazz.getDeclaredConstructors()) {
-            if (declaredConstructor.getParameterCount() == 0 || declaredConstructor.getParameterCount() == len) {
-                return declaredConstructor;
+        for (Constructor<?> constructor : clazz.getConstructors()) {
+            if (constructor.getParameterCount() == 0 || constructor.getParameterCount() == len) {
+                return constructor;
             }
         }
         throw new BeanCreatingException("Error creating class << %s >>. Must have an empty constructor or a constructor with %s arguments.", clazz.getName(), len);
@@ -169,11 +171,34 @@ public class ReflectionUtil {
      * Checks if the specified element has the specified annotation.
      *
      * @param element The element to check.
-     * @param annotation The annotation to check for.
+     * @param targetAnnotation The annotation to check for.
      * @return {@code true} if the element has the specified annotation; {@code false} otherwise.
      */
-    public static boolean hasAnnotation(@NonNull AnnotatedElement element, @NonNull Class<? extends Annotation> annotation) {
-        return element.isAnnotationPresent(annotation);
+    public static boolean hasAnnotation(@NonNull AnnotatedElement element, @NonNull Class<? extends Annotation> targetAnnotation) {
+        return hasComponentAnnotation(element, targetAnnotation, new HashSet<>());
+    }
+
+    private static boolean hasComponentAnnotation(AnnotatedElement element, @NonNull Class<? extends Annotation> targetAnnotation, Set<Class<?>> visited) {
+        // Проверяем, есть ли аннотация targetAnnotation на текущем элементе
+        if (element.isAnnotationPresent(targetAnnotation)) {
+            return true;
+        }
+
+        // Получаем все аннотации текущего элемента
+        Annotation[] annotations = element.getAnnotations();
+        for (Annotation annotation : annotations) {
+            Class<?> annotationType = annotation.annotationType();
+            // Проверяем, не проверяли ли мы эту аннотацию ранее
+            if (!visited.contains(annotationType)) {
+                visited.add(annotationType); // Добавляем аннотацию в множество проверенных
+                // Рекурсивно проверяем аннотацию
+                if (hasComponentAnnotation(annotationType, targetAnnotation, visited)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -194,7 +219,18 @@ public class ReflectionUtil {
             superClass = superClass.getSuperclass();
         }
 
-        return Arrays.stream(clazz.getInterfaces()).anyMatch(interfaceClass -> interfaceClass.equals(aClass) || hasInterfaceOrSuperClass(interfaceClass, aClass));
+        for (Class<?> interfaceClass : clazz.getInterfaces()) {
+            if (interfaceClass.equals(aClass) || hasInterfaceOrSuperClass(interfaceClass, aClass)) {
+                return true; // Если нашли нужный интерфейс
+            }
+            // Рекурсивно проверяем интерфейсы, которые наследует текущий интерфейс
+            for (Class<?> superInterface : interfaceClass.getInterfaces()) {
+                if (hasInterfaceOrSuperClass(superInterface, aClass)) {
+                    return true;
+                }
+            }
+        }
+        return false; // Если ничего не найдено
     }
 
     /**

@@ -1,6 +1,5 @@
 package ru.kiscode.kplugdi.context.processor.definition;
 
-import lombok.NonNull;
 import ru.kiscode.kplugdi.context.ApplicationContext;
 import ru.kiscode.kplugdi.context.factory.BeanFactory;
 import ru.kiscode.kplugdi.context.model.BeanDefinition;

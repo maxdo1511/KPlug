@@ -1,5 +1,4 @@
-package ru.kiscode.commands.annotations;
-
+package ru.kiscode.kplugboot.annotations;
 
 import ru.kiscode.kplugdi.annotations.Component;
 

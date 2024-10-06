@@ -18,10 +18,8 @@ public class DefaultBeanDefinitionFactory extends BeanDefinitionFactory {
     public Set<BeanDefinition> createBeanDefinitions(@NonNull JavaPlugin plugin) {
         Set<BeanDefinition> beanDefinitions = new HashSet<>();
         for(Class<?> clazz : beanProcessRegistry.getLoadedClasses()){
-            logger.warning("DefaultBeanDefinitionFactory: " + clazz.getName());
             for(BeanDefinitionReader reader : beanProcessRegistry.getBeanDefinitionReaders()){
-                logger.warning("BeanDefinitionReader: " + reader.getClass().getName());
-                beanDefinitions.addAll(reader.createBeanDefinition(clazz));
+                beanDefinitions.addAll(reader.createBeanDefinition(clazz, plugin));
             }
         }
         return beanDefinitions;

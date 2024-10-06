@@ -1,4 +1,4 @@
-package ru.kiscode.commands.processers;
+package ru.kiscode.kplugboot.processers;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -9,9 +9,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import ru.kiscode.commands.annotations.Command;
-import ru.kiscode.commands.annotations.CommandParams;
-import ru.kiscode.commands.interfaces.KPlugCommand;
+import ru.kiscode.kplugboot.annotations.Command;
+import ru.kiscode.kplugboot.annotations.CommandParams;
+import ru.kiscode.kplugboot.interfaces.KPlugCommand;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.utils.ReflectionUtil;
 
@@ -28,7 +28,9 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName, JavaPlugin plugin) {
+        System.out.println("Processing: " + beanName);
         if (ReflectionUtil.hasAnnotation(bean.getClass(), Command.class)) {
+            System.out.println("Found command: " + beanName);
             targets.put(beanName, bean);
             commands.put(beanName, bean.getClass().getAnnotation(Command.class).command());
             Map<String, Method> map = new HashMap<>();
@@ -55,13 +57,13 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
             @Override
             public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
                 if (method.getName().equals("onCommand")) {
-                    if (objects[3] == null) {
-                        Method noArgs = null;
+                    System.out.println(Arrays.toString(objects));
+                    if (objects[3] == null || ((String[]) objects[3]).length == 0) {
                         try {
-                            noArgs = target.getClass().getDeclaredMethod("noArgs", CommandSender.class);
-                        } catch (NoSuchMethodException ignored) {}
-                        if (noArgs == null) return true;
-                        noArgs.invoke(target, objects[0]);
+                           ((KPlugCommand) target).noArgs((CommandSender) objects[0]);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                         return true;
                     }
                     return onCommand(o, (CommandSender) objects[0], args.get(beanName), (String) objects[2], ((String[]) objects[3]));
@@ -190,5 +192,4 @@ public class CommandBeanPostProcessor implements BeanPostProcessor {
         }
         return null;
     }
-
 }
