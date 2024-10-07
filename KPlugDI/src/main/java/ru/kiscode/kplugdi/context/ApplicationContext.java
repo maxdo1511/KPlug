@@ -59,7 +59,6 @@ public class ApplicationContext {
         }
     }
 
-    // Зачем проход по всем инициализаторам
     public static void run(JavaPlugin plugin) {
         if (applicationContext == null) {
             applicationContext = new ApplicationContext();
@@ -78,7 +77,6 @@ public class ApplicationContext {
         }
     }
 
-    // Выглядит неправильно
     public static void refresh() {
         if (applicationContext == null) {
             applicationContext = new ApplicationContext();
@@ -93,6 +91,14 @@ public class ApplicationContext {
                 initializer.run(plugin);
             }
         }
+    }
+
+    public Object getBean(@NonNull String name, JavaPlugin plugin) {
+        return beanRegistry.getBean(name, plugin);
+    }
+
+    public <T> T getBean(@NonNull Class<T> clazz, JavaPlugin plugin) {
+        return beanRegistry.getBean(clazz, plugin);
     }
 
     public void addApplicationContextInitializer(@NonNull ApplicationContextInitializer initializer) {

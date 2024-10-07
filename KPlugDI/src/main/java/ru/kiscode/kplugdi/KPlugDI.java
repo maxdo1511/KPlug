@@ -10,15 +10,14 @@ import ru.kiscode.kplugdi.listener.ServerStartListener;
 
 @Getter
 public final class KPlugDI extends JavaPlugin {
+    @Getter
+    private static KPlugDI instance;
     private final BeanProcessRegistry beanProcessRegistry = new BeanProcessRegistry();
     private final BeanRegistry beanRegistry = new BeanRegistry(beanProcessRegistry);
 
-    public static KPlugDI getInstance() {
-        return getPlugin(KPlugDI.class);
-    }
-
     @Override
     public void onEnable() {
+        instance = this;
         saveDefaultConfig();
         this.getServer().getPluginManager().registerEvents(new ServerStartListener(), this);
         ApplicationContext.run(this);

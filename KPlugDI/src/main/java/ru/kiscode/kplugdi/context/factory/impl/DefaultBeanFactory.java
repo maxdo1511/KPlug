@@ -14,7 +14,7 @@ public class DefaultBeanFactory extends BeanFactory {
     public Object createBean(@NonNull BeanDefinition beanDefinition, @NonNull JavaPlugin plugin) {
         Object object = null;
         for(BeanReader beanReader: beanProcessRegistry.getBeanReaders()){
-            object = beanReader.createBean(beanDefinition, beanRegistry,plugin);
+            object = beanReader.createBean(beanDefinition, beanRegistry, plugin);
         }
         return object;
     }

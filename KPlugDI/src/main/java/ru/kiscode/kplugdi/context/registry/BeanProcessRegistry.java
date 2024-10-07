@@ -44,13 +44,13 @@ public class BeanProcessRegistry {
                 BeanDefinitionPostProcessor beanDefinitionPostProcessor = (BeanDefinitionPostProcessor) classInstance;
                 beanDefinitionPostProcessors.add(beanDefinitionPostProcessor);
             }
+            if(ReflectionUtil.hasInterface(clazz, BeanScope.class)) {
+                classInstance = ReflectionUtil.newInstance(clazz, plugin);
+                BeanScope beanScope = (BeanScope) classInstance;
+                ApplicationContext.getApplicationContext().getBeanRegistry().getBeanScopes().put(beanScope.getScopeName(), beanScope);
+                continue;
+            }
             if(ReflectionUtil.hasInterfaceOrSuperClass(clazz, BeanPostProcessor.class)) {
-                if(ReflectionUtil.hasInterface(clazz, BeanScope.class)) {
-                    classInstance = ReflectionUtil.newInstance(clazz, plugin);
-                    BeanScope beanScope = (BeanScope) classInstance;
-                    ApplicationContext.getApplicationContext().getBeanRegistry().getBeanScopes().put(beanScope.getScopeName(), beanScope);
-                    continue;
-                }
                 if(classInstance == null) classInstance = ReflectionUtil.newInstance(clazz, plugin);
                 BeanPostProcessor beanPostProcessor = (BeanPostProcessor) classInstance;
                 beanPostProcessors.add(beanPostProcessor);

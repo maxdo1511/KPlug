@@ -2,18 +2,16 @@ package ru.kiscode.kplugdi.context.scope;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import ru.kiscode.kplugdi.KPlugDI;
+import ru.kiscode.kplugdi.context.model.BeanDefinition;
 import ru.kiscode.kplugdi.context.processor.BeanPostProcessor;
 import ru.kiscode.kplugdi.context.registry.BeanRegistry;
 
-public interface BeanScope extends BeanPostProcessor {
+public interface BeanScope {
 
-    Object getBean(Object bean, String beanName, JavaPlugin plugin, BeanRegistry beanRegistry);
+    Object getBean(Class<?> beanClass, JavaPlugin plugin, BeanRegistry beanRegistry);
+    Object getBean(BeanDefinition beanDefinition, JavaPlugin plugin, BeanRegistry beanRegistry);
+    Object getBean(String beanName, JavaPlugin plugin, BeanRegistry beanRegistry);
 
     String getScopeName();
-
-    @Override
-    default Object postProcessAfterInitialization(Object bean, String beanName, JavaPlugin plugin) {
-        return getBean(bean, beanName, plugin, KPlugDI.getInstance().getBeanRegistry());
-    }
 
 }

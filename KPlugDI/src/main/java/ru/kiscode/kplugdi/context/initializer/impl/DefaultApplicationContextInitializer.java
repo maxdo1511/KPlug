@@ -54,7 +54,7 @@ public class DefaultApplicationContextInitializer extends ApplicationContextInit
                         .forEach(beanDefinitionPostProcessor -> beanDefinitionPostProcessor.postProcess(beanDefinition)));
 
         //создаем бины
-        beanRegistry.createAndRegistryBeans(beanDefinitions, plugin);
+        beanRegistry.createBeans(beanDefinitions, plugin);
     }
 
     private void loadAllResources(@NonNull CollectionResourceLoader<Class<?>> resourceLoader, @NonNull Set<Class<?>> classes) {
