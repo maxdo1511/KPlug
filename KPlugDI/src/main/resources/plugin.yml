@@ -1,4 +1,0 @@
-name: KPlugDI
-version: '${project.version}'
-main: ru.kiscode.kplugdi.KPlugDI
-load: STARTUP
